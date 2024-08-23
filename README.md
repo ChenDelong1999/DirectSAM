@@ -1,6 +1,36 @@
-# DirectSAM Training
+# DirectSAM Self-Training
+
+Pseudo Labeling
 
 
+```bash
+# single folder
+cd /home/dchenbs/workspace/DirectSAM
+conda activate subobject
+CUDA_VISIBLE_DEVICES=0 python pseudo_labeling.py \
+    --image_dir "/home/dchenbs/workspace/datasets/LoveDA/Train/Urban/images_png" \
+    --output_dir "/home/dchenbs/workspace/datasets/LoveDA/directsam/Urban/res_1800px_thr.03_output" \
+    --checkpoint "chendelong/DirectSAM-1800px-0424" --resolution 1800 --threshold 0.3
+```
+
+```bash
+# loop over multiple folders
+
+cd /home/dchenbs/workspace/DirectSAM
+conda activate subobject
+for i in $(seq -f "%06g" 125 149)
+do
+    echo $i
+    CUDA_VISIBLE_DEVICES=5 python pseudo_labeling.py \
+        --image_dir "/home/dchenbs/workspace/datasets/sa1b/sa_$i" \
+        --output_dir "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output" \
+        --checkpoint "chendelong/DirectSAM-1800px-0424" --resolution 1800 --threshold 0.3
+done
+
+```
+
+
+Self-training
 ```bash
 cd /home/dchenbs/workspace/DirectSAM
 conda activate subobject

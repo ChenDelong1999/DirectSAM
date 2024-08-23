@@ -17,7 +17,6 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_configs', default='data/dataset_configs.json')
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--resolution', type=int, default=768)
-    parser.add_argument('--thickness', type=int, default=2)
     parser.add_argument('--n_samples', type=int, default=-1)
     parser.add_argument('--threshold_steps', type=float, default=0.01)
     parser.add_argument('--bin_step', type=int, default=32)
@@ -35,7 +34,7 @@ if __name__ == '__main__':
         dataset_configs[args.dataset_name],
         split='validation',
         resolution=args.resolution,
-        thickness=args.thickness
+        thickness=2
     )
     if args.n_samples == -1:
         args.n_samples = len(dataset)

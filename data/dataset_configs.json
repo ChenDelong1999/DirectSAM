@@ -4,6 +4,11 @@
         "image_folder": "/home/dchenbs/workspace/datasets/PascalPanopticParts/VOC2012/JPEGImages",
         "annotations": "/home/dchenbs/workspace/datasets/PascalPanopticParts/labels"
     },
+    "SPIN": {
+        "type": "SPIN",
+        "image_folder": "/share/datasets/imagenet/train",
+        "annotations": "/home/dchenbs/workspace/datasets/SPIN/spin_splits"
+    },
     "PartImageNet++": {
         "type": "PartImageNet++",
         "image_folder": "/share/datasets/imagenet/train",

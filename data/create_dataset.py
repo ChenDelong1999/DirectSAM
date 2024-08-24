@@ -28,8 +28,18 @@ from torchvision.datasets import CocoDetection
 def create_dataset(dataset_info, split, resolution, thickness=3):
 
     assert split in ['train', 'validation']
+
+    if dataset_info['type'] == 'SPIN':
+            
+        return SPIN(
+            annotation_path=dataset_info['annotations'],
+            image_dir=dataset_info['image_folder'],
+            resolution=resolution,
+            thickness=thickness,
+            split=split
+        )
     
-    if dataset_info['type'] == 'LVIS':
+    elif dataset_info['type'] == 'LVIS':
         annotation_file = 'lvis_v1_val.json' if split == 'validation' else 'lvis_v1_train.json'
             
         return LvisDataset(
@@ -168,6 +178,9 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
         return dataset
     
+    else:
+        raise ValueError(f"Dataset type {dataset_info['type']} not supported")
+    
 
 
 
@@ -281,6 +294,39 @@ class PascalPanopticParts(TorchDataset):
         image = resize_image(image, self.resolution)
 
         label = PILImage.open(os.path.join(self.annotation_path, sample))
+        label = annotation_to_label(label, self.resolution, self.thickness)
+
+        return {'image': image, 'label': label}
+
+class SPIN(TorchDataset):
+
+    def __init__(self, annotation_path, image_dir, resolution, thickness, split):
+
+        if split == 'train':
+            self.annotation_path = os.path.join(annotation_path, 'train')
+        elif split == 'validation':
+            self.annotation_path = os.path.join(annotation_path, 'test') # 'val' split ignored
+
+        self.image_dir = image_dir
+        self.resolution = resolution
+        self.thickness = thickness
+        self.split = split
+
+        self.samples = []
+        for sample in os.listdir(self.annotation_path):
+            self.samples.append(sample.split('.')[0])
+
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+
+        id = self.samples[idx]
+
+        image = PILImage.open(os.path.join(self.image_dir, id.split('_')[0], id+'.JPEG')).convert('RGB')
+        image = resize_image(image, self.resolution)
+
+        label = PILImage.open(os.path.join(self.annotation_path, id+'.png'))
         label = annotation_to_label(label, self.resolution, self.thickness)
 
         return {'image': image, 'label': label}

@@ -1,7 +1,16 @@
 {
+    
+    "DRAM": {
+        "type": "DRAM",
+        "root": "/home/dchenbs/workspace/datasets/DRAM"
+    },
+    "SOBA": {
+        "type": "SOBA",
+        "root": "/home/dchenbs/workspace/datasets/SOBA/SOBA"
+    },
     "UDA-Part": {
         "type": "UDA-Part",
-        "root": "/home/dchenbs/workspace/datasets/UDA-Part"
+        "root": "/home/dchenbs/workspace/datasets/UDA-Part/ds_version"
     },
     "SeginW": {
         "type": "SeginW",

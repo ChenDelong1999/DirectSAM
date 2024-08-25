@@ -37,6 +37,21 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
         return get_image_folder_dataset(image_folder, label_folder, resolution, thickness, image_suffix='jpg', label_suffix='png')
     
+    elif dataset_info['type'] == 'DRAM':
+        return DRAM(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness,
+            split=split
+        )
+    elif dataset_info['type'] == 'SOBA':
+        return SOBA(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness,
+            split=split
+        )
+    
     elif dataset_info['type'] == 'SeginW':
         return SeginW(
             root=dataset_info['root'],
@@ -467,8 +482,8 @@ class UDAPart(TorchDataset):
         self.thickness = thickness
 
         self.samples = []
-        for class_folder in os.listdir(root):
-            image_folder = os.path.join(root, class_folder, 'image')
+        for class_folder in ['aeroplane', 'bicycle', 'bus', 'car', 'motorbike']:
+            image_folder = os.path.join(root, class_folder, 'image2')
             for model in os.listdir(image_folder):
                 for image in os.listdir(os.path.join(image_folder, model)):
                     self.samples.append(os.path.join(image_folder, model, image))
@@ -482,7 +497,7 @@ class UDAPart(TorchDataset):
         image = PILImage.open(image_path).convert('RGB')
         image = resize_image(image, self.resolution)
 
-        label_path = image_path.replace('/image/', '/seg/')
+        label_path = image_path.replace('/image2/', '/seg2/')
         label = PILImage.open(label_path)
         label = label_map_to_boundary(label, self.resolution, self.thickness)
 
@@ -537,3 +552,87 @@ class SeginW():
 
         return {'image': image, 'label': boundary}
         
+
+class SOBA(TorchDataset):
+
+    def __init__(self, root, resolution, thickness, split):
+
+        self.resolution = resolution
+        self.thickness = thickness
+        self.split = split
+        self.root = root
+
+        split_ratio = 0.84
+
+        self.samples = []
+        for subset_name in os.listdir(root):
+            subset_samples = []
+            for file in os.listdir(os.path.join(root, subset_name)):
+                if file.endswith('.jpg'):
+                    subset_samples.append(os.path.join(subset_name, file.split('.')[0]))
+
+            split_index = int(len(subset_samples) * split_ratio)
+            if split == 'train':
+                self.samples += subset_samples[:split_index]
+            else:
+                self.samples += subset_samples[split_index:]
+
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+            
+        sample = self.samples[idx]
+        image = PILImage.open(os.path.join(self.root, sample+'.jpg')).convert('RGB')
+        image = resize_image(image, self.resolution)
+
+        label_instance = PILImage.open(os.path.join(self.root, sample+'-2.png'))
+        label_shadow = PILImage.open(os.path.join(self.root, sample+'-3.png'))
+
+        boundary_instance = label_map_to_boundary(label_instance, self.resolution, self.thickness)
+        boundary_shadow = label_map_to_boundary(label_shadow, self.resolution, self.thickness)
+
+        label = boundary_instance + boundary_shadow
+
+        return {'image': image, 'label': label}
+
+
+class DRAM(TorchDataset):
+
+    def __init__(self, root, resolution, thickness, split):
+
+        self.resolution = resolution
+        self.thickness = thickness
+        if split == 'validation':
+            self.split = 'test'
+        else:
+            self.split = 'train'
+            print('Warning: DRAM dataset only has annotations for test split')
+        self.root = root
+
+        self.samples = []
+        for file in os.listdir(os.path.join(root, self.split)):
+            if file.endswith('.txt'):
+                # each line is a sample
+                with open(os.path.join(root, self.split, file), 'r') as f:
+                    for line in f:
+                        self.samples.append(line.strip())
+
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+                
+        sample = self.samples[idx]
+        image = PILImage.open(os.path.join(self.root, self.split, sample+'.jpg')).convert('RGB')
+        image = resize_image(image, self.resolution)
+
+        if self.split == 'train':
+            label = np.zeros((self.resolution, self.resolution), dtype=np.uint8)
+        else:
+            label = PILImage.open(os.path.join(self.root, 'labels', sample+'.png'))
+            label = label_map_to_boundary(label, self.resolution, self.thickness)
+
+        return {'image': image, 'label': label}
+                
+

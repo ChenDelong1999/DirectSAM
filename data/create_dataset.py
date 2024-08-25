@@ -2,6 +2,7 @@
 import os
 import json
 from PIL import Image as PILImage
+import numpy as np
 from datasets import Dataset, load_dataset
 from torchvision.datasets import CocoDetection
 
@@ -16,7 +17,7 @@ from .transforms import (
     transforms_entity_seg, 
     transforms_directsam_pseudo_label,
     resize_image,
-    annotation_to_label
+    label_map_to_boundary
     )
 
 import os
@@ -29,7 +30,50 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
     assert split in ['train', 'validation']
 
-    if dataset_info['type'] == 'SPIN':
+    if dataset_info['type'] == 'CIHP':
+        split = 'Training' if split == 'train' else 'Validation'
+        image_folder = os.path.join(dataset_info['root'], split, 'Images')
+        label_folder = os.path.join(dataset_info['root'], split, 'Instance_ids')
+
+        return get_image_folder_dataset(image_folder, label_folder, resolution, thickness, image_suffix='jpg', label_suffix='png')
+    
+    elif dataset_info['type'] == 'SeginW':
+        return SeginW(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness,
+            split=split
+        )
+    
+    elif dataset_info['type'] == 'UDA-Part':
+
+        if split!='train':
+            print('Warning: UDA-Part dataset only supports train split')
+        
+        return UDAPart(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness
+        )
+    elif dataset_info['type'] == 'Fashionpedia':
+        return Fashionpedia(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness,
+            split=split
+        )
+    
+
+    elif dataset_info['type'] == 'PartIT':
+            
+        return PartIT(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness,
+            split=split
+        )
+    
+    elif dataset_info['type'] == 'SPIN':
             
         return SPIN(
             annotation_path=dataset_info['annotations'],
@@ -162,19 +206,7 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
     elif dataset_info['type'] == 'image_folders':
 
         print('Warning: "split" argument is ignored for image_folders datasets')
-
-        label_files = [x.split('.')[0] for x in os.listdir(dataset_info['label_folder']) if x.split('.')[-1] == 'png']
-        label_ids = [file_name.split('.')[0] for file_name in label_files]
-
-        image_files = [x.split('.')[0] for x in os.listdir(dataset_info['image_folder']) if x.split('.')[-1] == 'jpg']
-        image_ids = [file_name.split('.')[0] for file_name in image_files]
-
-        # use image_ids to filter out label_ids, since for COCONut-B dataset, the label folder also contains samples in COCONut-B
-        image_ids_with_path = [os.path.join(dataset_info['image_folder'], x) for x in image_ids]
-        label_ids_with_path = [os.path.join(dataset_info['label_folder'], x) for x in image_ids]
-
-        dataset = Dataset.from_dict({"image": sorted(image_ids_with_path), "label": sorted(label_ids_with_path)})
-        dataset.set_transform(lambda x: transforms_image_folders(x, resolution, thickness))
+        dataset = get_image_folder_dataset(dataset_info['image_folder'], dataset_info['label_folder'], resolution, thickness)
 
         return dataset
     
@@ -182,6 +214,20 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
         raise ValueError(f"Dataset type {dataset_info['type']} not supported")
     
 
+def get_image_folder_dataset(image_folder,label_folder, resolution, thickness, image_suffix='jpg', label_suffix='png'):
+    image_files = [x.split('.')[0] for x in os.listdir(image_folder) if x.split('.')[-1] == image_suffix]
+    image_ids = [file_name.split('.')[0] for file_name in image_files]
+
+    # label_files = [x.split('.')[0] for x in os.listdir(label_folder) if x.split('.')[-1] == label_suffix]
+    # label_ids = [file_name.split('.')[0] for file_name in label_files]
+
+    image_ids_with_path = [os.path.join(image_folder, x) for x in image_ids]
+    label_ids_with_path = [os.path.join(label_folder, x) for x in image_ids]
+
+    dataset = Dataset.from_dict({"image": sorted(image_ids_with_path), "label": sorted(label_ids_with_path)})
+    dataset.set_transform(lambda x: transforms_image_folders(x, resolution, thickness, image_suffix, label_suffix))
+
+    return dataset
 
 
 class LvisDataset(TorchDataset):
@@ -214,8 +260,8 @@ class LvisDataset(TorchDataset):
             else:
                 label_map += mask * (i + 1)
 
-        label_map = annotation_to_label(label_map, self.resolution, self.thickness)
-        return {'image': image, 'label': label_map}
+        boundary = label_map_to_boundary(label_map, self.resolution, self.thickness)
+        return {'image': image, 'label': boundary}
 
 
 class PartImageNetPP(TorchDataset):
@@ -256,16 +302,9 @@ class PartImageNetPP(TorchDataset):
         annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=None)
         anns = coco.loadAnns(annIds)
         
-        label_map = None
-        for i, ann in enumerate(anns):
-            mask = coco.annToMask(ann)
-            if label_map is None:
-                label_map = mask
-            else:
-                label_map += mask * (i + 1)
-
-        label_map = annotation_to_label(label_map, self.resolution, self.thickness)
-        return {'image': image, 'label': label_map}
+        label_map = coco_annotation_to_label_map(anns, coco)
+        boundary = label_map_to_boundary(label_map, self.resolution, self.thickness)
+        return {'image': image, 'label': boundary}
     
 
 
@@ -294,7 +333,7 @@ class PascalPanopticParts(TorchDataset):
         image = resize_image(image, self.resolution)
 
         label = PILImage.open(os.path.join(self.annotation_path, sample))
-        label = annotation_to_label(label, self.resolution, self.thickness)
+        label = label_map_to_boundary(label, self.resolution, self.thickness)
 
         return {'image': image, 'label': label}
 
@@ -327,6 +366,174 @@ class SPIN(TorchDataset):
         image = resize_image(image, self.resolution)
 
         label = PILImage.open(os.path.join(self.annotation_path, id+'.png'))
-        label = annotation_to_label(label, self.resolution, self.thickness)
+        label = label_map_to_boundary(label, self.resolution, self.thickness)
 
         return {'image': image, 'label': label}
+    
+
+class PartIT(TorchDataset):
+
+    def __init__(self, root, resolution, thickness, split):
+
+        self.root = root
+        self.resolution = resolution
+        self.thickness = thickness
+        self.split = 'test' if split == 'validation' else 'train'
+
+        self.samples = []
+        for class_folder in os.listdir(root):
+            for sample in os.listdir(os.path.join(root, class_folder, self.split)):
+                self.samples.append(os.path.join(class_folder, self.split, sample))
+
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+
+        sample = self.samples[idx]
+        image = PILImage.open(os.path.join(self.root, sample, '0.png')).convert('RGB')
+        image = resize_image(image, self.resolution)
+
+        files = os.listdir(os.path.join(self.root, sample))
+        # get all images where has 'occluded.png
+
+        label_map = None
+        part_id = 1
+        for file in files:
+            if 'occluded.png' in file:
+                label = PILImage.open(os.path.join(self.root, sample, file))
+                label = (np.array(label)!= 255) * part_id
+
+                if label_map is None:
+                    label_map = label
+                else:
+                    label_map += label
+                part_id += 1
+        
+        label = label_map_to_boundary(label_map, self.resolution, self.thickness)
+
+        return {'image': image, 'label': label}
+
+class Fashionpedia(TorchDataset):
+
+    def __init__(self, root, resolution, thickness, split):
+
+        self.root = root
+        self.resolution = resolution
+        self.thickness = thickness
+        self.split = 'test' if split == 'validation' else 'train'
+
+        self.dataset = COCO(os.path.join(root, f"instances_attributes_{'val' if split == 'validation' else 'train'}2020.json"))
+
+        self.img_ids = self.dataset.getImgIds()
+        self.cat_ids = self.dataset.getCatIds()
+
+    def __len__(self):
+        return len(self.img_ids)
+    
+    def __getitem__(self, idx):
+        img_id = self.img_ids[idx]
+
+        image = PILImage.open(os.path.join(self.root, self.split, self.dataset.loadImgs(img_id)[0]['file_name'])).convert('RGB')
+
+        image = resize_image(image, self.resolution)
+
+        ann_ids = self.dataset.getAnnIds(imgIds=img_id)
+        anns = self.dataset.loadAnns(ann_ids)
+
+        label_map = coco_annotation_to_label_map(anns, self.dataset)
+        boundary = label_map_to_boundary(label_map, self.resolution, self.thickness)
+
+        return {'image': image, 'label': boundary}
+
+
+def coco_annotation_to_label_map(anns, coco):
+    label_map = None
+    for i, ann in enumerate(anns):
+        mask = coco.annToMask(ann)
+        if label_map is None:
+            label_map = mask
+        else:
+            label_map += mask * (i + 1)
+
+    return label_map
+
+
+class UDAPart(TorchDataset):
+
+    def __init__(self, root, resolution, thickness):
+
+        self.resolution = resolution
+        self.thickness = thickness
+
+        self.samples = []
+        for class_folder in os.listdir(root):
+            image_folder = os.path.join(root, class_folder, 'image')
+            for model in os.listdir(image_folder):
+                for image in os.listdir(os.path.join(image_folder, model)):
+                    self.samples.append(os.path.join(image_folder, model, image))
+
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+            
+        image_path = self.samples[idx]
+        image = PILImage.open(image_path).convert('RGB')
+        image = resize_image(image, self.resolution)
+
+        label_path = image_path.replace('/image/', '/seg/')
+        label = PILImage.open(label_path)
+        label = label_map_to_boundary(label, self.resolution, self.thickness)
+
+        return {'image': image, 'label': label}
+    
+
+class SeginW():
+
+    def __init__(self, root, resolution, thickness, split):
+
+        self.resolution = resolution
+        self.thickness = thickness
+        self.split = 'valid' if split == 'validation' else 'train'
+        self.root = root
+
+        self.subsets = {}
+        for subset_name in os.listdir(root):
+            if subset_name == 'Salmon-Fillet':
+                continue # ignore this subset due to quality issues
+            for file in os.listdir(os.path.join(root, subset_name, self.split)):
+                if file.endswith('.json'):
+                    self.subsets[subset_name] = COCO(os.path.join(root, subset_name, self.split, file))
+
+
+        self.samples = []
+        for subset_name, subset in self.subsets.items():
+            for img_id in subset.getImgIds():
+                self.samples.append((subset_name, img_id))
+
+    def __len__(self):
+        return len(self.samples)
+    
+
+    def __getitem__(self, idx):
+
+        subset_name, img_id = self.samples[idx]
+        img = self.subsets[subset_name].loadImgs(img_id)[0]
+        ann_ids = self.subsets[subset_name].getAnnIds(imgIds=img['id'])
+        anns = self.subsets[subset_name].loadAnns(ann_ids)
+
+        img_path = os.path.join(self.root, subset_name, self.split, img['file_name'])
+        image = PILImage.open(img_path).convert('RGB')
+        image = resize_image(image, self.resolution)
+        
+        if len(anns) > 0:
+            label_map = coco_annotation_to_label_map(anns, self.subsets[subset_name])
+        else:
+            label_map = np.zeros((img['height'], img['width']), dtype=np.uint8)
+            print(f"Warning: Empty annotation for {img_path}")
+
+        boundary = label_map_to_boundary(label_map, self.resolution, self.thickness)
+
+        return {'image': image, 'label': boundary}
+        

@@ -1,4 +1,24 @@
 {
+    "UDA-Part": {
+        "type": "UDA-Part",
+        "root": "/home/dchenbs/workspace/datasets/UDA-Part"
+    },
+    "SeginW": {
+        "type": "SeginW",
+        "root": "/home/dchenbs/workspace/datasets/seginw"
+    },
+    "CIHP": {
+        "type": "CIHP",
+        "root": "/home/dchenbs/workspace/datasets/instance-level_human_parsing"
+    },
+    "Fashionpedia": {
+        "type": "Fashionpedia",
+        "root": "/home/dchenbs/workspace/datasets/Fashionpedia"
+    },
+    "PartIT": {
+        "type": "PartIT",
+        "root": "/home/dchenbs/workspace/datasets/PartIT"
+    },
     "PascalPanopticParts": {
         "type": "PascalPanopticParts",
         "image_folder": "/home/dchenbs/workspace/datasets/PascalPanopticParts/VOC2012/JPEGImages",

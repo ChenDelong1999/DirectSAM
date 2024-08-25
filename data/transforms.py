@@ -44,7 +44,7 @@ def masks_to_boundary(masks, thickness=3):
     return boundaries > 0
 
 
-def annotation_to_label(label_map, resolution, thickness=3):
+def label_map_to_boundary(label_map, resolution, thickness=3):
     """
     Parameters:
     label_map (PIL.Image or numpy array): The input label map (single channel).
@@ -76,13 +76,15 @@ def annotation_to_label(label_map, resolution, thickness=3):
 
 def transforms_huggingface_dataset(example_batch, resolution, thickness):
     images = [resize_image(x.convert("RGB"), resolution) for x in example_batch["image"]]
-    labels = [annotation_to_label(x, resolution, thickness) for x in example_batch["annotation"]]
+    labels = [label_map_to_boundary(x, resolution, thickness) for x in example_batch["annotation"]]
     return {'image': images, 'label': labels}
 
 
-def transforms_image_folders(example_batch, resolution, thickness, image_suffix='.jpg', label_suffix='.png'):
+def transforms_image_folders(example_batch, resolution, thickness, image_suffix='jpg', label_suffix='png'):
+    image_suffix = '.' + image_suffix if image_suffix else ''
+    label_suffix = '.' + label_suffix if label_suffix else ''
     images = [resize_image(PILImage.open(x+image_suffix).convert("RGB"), resolution) for x in example_batch["image"]]
-    labels = [annotation_to_label(PILImage.open(x+label_suffix), resolution, thickness) for x in example_batch["label"]]
+    labels = [label_map_to_boundary(PILImage.open(x+label_suffix), resolution, thickness) for x in example_batch["label"]]
     return {'image': images, 'label': labels}
 
 
@@ -94,7 +96,7 @@ def transforms_coco_single_sample(image, annotations, resolution, thickness):
         if len(mask.shape) == 3:
             mask = mask.sum(axis=2)
         masks += mask * (i + 1)
-    label = annotation_to_label(masks, resolution, thickness)
+    label = label_map_to_boundary(masks, resolution, thickness)
     image = resize_image(image, resolution)
     return image, label
 
@@ -108,7 +110,7 @@ def transforms_entity_seg(example_batch, resolution, thickness):
         return masks
 
     images = [resize_image(PILImage.open(x), resolution) for x in example_batch["image"]]
-    labels = [annotation_to_label(decode_and_merge_rle_annotations(x), resolution, thickness) for x in example_batch["label"]]
+    labels = [label_map_to_boundary(decode_and_merge_rle_annotations(x), resolution, thickness) for x in example_batch["label"]]
 
     return {'image': images, 'label': labels}
 

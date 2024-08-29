@@ -67,15 +67,21 @@ https://www.lvisdataset.org/dataset
 
 ```bash
 
+thresholds=(
+    0.1
+    0.2
+    0.3
+    0.4
+    0.5
+)
+
 ckpts=(
     "chendelong/DirectSAM-1800px-0424"
     # "chendelong/DirectSAM-EntitySeg-1024px-0501"
     # "chendelong/DirectSAM-tiny-distilled-10ep-1024px-0726"
     # "chendelong/DirectSAM-tiny-distilled-15ep-768px-0821"
-    "runs/directsam_pseudo_label_merged/0828-2024-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-28000"
-    "/home/dchenbs/workspace/DirectSAM/runs/directsam_pseudo_label_merged/0829-1210-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-2000"
-    "/home/dchenbs/workspace/DirectSAM/runs/directsam_pseudo_label_merged/0829-1210-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-4000"
-    "/home/dchenbs/workspace/DirectSAM/runs/directsam_pseudo_label_merged/0829-1210-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-6000"
+    # "runs/directsam_pseudo_label_merged/0828-2024-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-28000"
+    # "/home/dchenbs/workspace/DirectSAM/runs/directsam_pseudo_label_merged/0829-1210-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-6000"
 )
 
 datasets=(
@@ -96,7 +102,7 @@ for dataset in $datasets; do
         --dataset_name $dataset \
         --directsam_ckpt $ckpt \
         --resolution 1024 \
-        --n_samples 1000 \
+        --n_samples 100 \
         --threshold 0.5
 
     done

@@ -58,7 +58,8 @@
     },
     "ADE20k": {
         "type": "huggingface_dataset",
-        "id": "scene_parse_150"
+        "id": "scene_parse_150",
+        "image_folder": "/home/dchenbs/workspace/datasets/ADE20k/train"
     },
     "EntitySeg": {
         "type": "EntitySeg",
@@ -84,6 +85,11 @@
         "image_folder": "/home/dchenbs/workspace/datasets/coco2017/images/unlabeled2017",
         "label_folder": "/home/dchenbs/workspace/datasets/coconut_dataset/coconut_b/panoptic_train2017"
     },
+    "COCONut-l": {
+        "type": "COCONut-l",
+        "image_folder": "/home/dchenbs/workspace/datasets/Objects365/raw/Objects365/data/train",
+        "label_folder": "/home/dchenbs/workspace/datasets/coconut_dataset/coconut_large/object365_train_panseg"
+    },
     "COCO2017": {
         "type": "coco",
         "image_folder": "/home/dchenbs/workspace/datasets/coco2017/images",
@@ -97,7 +103,7 @@
     "LVIS": {
         "type": "LVIS",
         "image_folder": "/home/dchenbs/workspace/datasets/coco2017/images",
-        "annotations": "/home/dchenbs/workspace/datasets/lvis/paco"
+        "annotations": "/home/dchenbs/workspace/datasets/lvis"
     },
     "directsam_pseudo_label": {
         "type": "directsam_pseudo_label",

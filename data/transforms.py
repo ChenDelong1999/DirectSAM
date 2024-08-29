@@ -44,7 +44,7 @@ def masks_to_boundary(masks, thickness=3):
     return boundaries > 0
 
 
-def label_map_to_boundary(label_map, resolution, thickness=3):
+def label_map_to_boundary(label_map, resolution, thickness=3, force_bindary=False):
     """
     Parameters:
     label_map (PIL.Image or numpy array): The input label map (single channel).
@@ -56,6 +56,9 @@ def label_map_to_boundary(label_map, resolution, thickness=3):
     """
 
     label_map = np.array(label_map)
+    if force_bindary:
+        theshold = label_map.max() / 2
+        label_map = (label_map > theshold).astype(np.uint8)
 
     # avoid using PIL.Image.convert("L") 
     if len(label_map.shape) == 3:
@@ -80,11 +83,11 @@ def transforms_huggingface_dataset(example_batch, resolution, thickness):
     return {'image': images, 'label': labels}
 
 
-def transforms_image_folders(example_batch, resolution, thickness, image_suffix='jpg', label_suffix='png'):
+def transforms_image_folders(example_batch, resolution, thickness, image_suffix='jpg', label_suffix='png', force_bindary=False):
     image_suffix = '.' + image_suffix if image_suffix else ''
     label_suffix = '.' + label_suffix if label_suffix else ''
     images = [resize_image(PILImage.open(x+image_suffix).convert("RGB"), resolution) for x in example_batch["image"]]
-    labels = [label_map_to_boundary(PILImage.open(x+label_suffix), resolution, thickness) for x in example_batch["label"]]
+    labels = [label_map_to_boundary(PILImage.open(x+label_suffix), resolution, thickness, force_bindary) for x in example_batch["label"]]
     return {'image': images, 'label': labels}
 
 

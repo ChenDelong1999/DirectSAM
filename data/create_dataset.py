@@ -69,6 +69,33 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
             split=split
         )
     
+    elif dataset_info['type'] == "COCONut-l":
+        if split == 'validation':
+            print('Warning: COCONut-l dataset only supports train split')    
+
+        # walk through dataset_info['image_folder']
+        id_to_path = {}
+        for root, dirs, files in os.walk(dataset_info['image_folder']):
+            for file in files:
+                if file.endswith(".jpg"):
+                    id_to_path[file.split('.')[0]] = os.path.join(root, file)
+
+        labels = os.listdir(dataset_info['label_folder'])
+
+        labels_list = []
+        images_list = []
+
+        for label in labels:
+            labels_list.append(os.path.join(dataset_info['label_folder'], label))
+            id = label.split(".")[0]
+            images_list.append(id_to_path[id])
+
+        dataset = Dataset.from_dict({"image": images_list, "label": labels_list})
+        dataset.set_transform(lambda x: transforms_image_folders(x, resolution, thickness, image_suffix='', label_suffix=''))
+
+        dataset.image_paths = images_list
+        return dataset
+    
     elif dataset_info['type'] == 'SOBA':
         return SOBA(
             root=dataset_info['root'],
@@ -185,6 +212,9 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
         
         dataset = load_dataset(dataset_info['id'], split=split) # ['train', 'test', 'validation']
         dataset.set_transform(lambda x: transforms_huggingface_dataset(x, resolution, thickness))
+
+        images = os.listdir(dataset_info['image_folder'])
+        dataset.image_paths = [os.path.join(dataset_info['image_folder'], x) for x in images]
         return dataset
 
     elif dataset_info['type'] == 'EntitySeg':
@@ -214,6 +244,8 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
         dataset = Dataset.from_dict({"image": images_list, "label": labels_list})
         dataset.set_transform(lambda x: transforms_entity_seg(x, resolution, thickness))
+
+        dataset.image_paths = images_list
 
         return dataset
     
@@ -250,13 +282,20 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
         dataset = Dataset.from_dict({"image": image_paths, "label": label_paths})
         dataset.set_transform(lambda x: transforms_image_folders(x, resolution, thickness, image_suffix='', label_suffix=''))
+        dataset.image_paths = image_paths
 
         return dataset
     
     elif dataset_info['type'] == 'image_folders':
 
         print('Warning: "split" argument is ignored for image_folders datasets')
-        dataset = get_image_folder_dataset(dataset_info['image_folder'], dataset_info['label_folder'], resolution, thickness)
+
+        force_bindary = False
+        for keyword in ['COIFT', 'DIS5K-DIS-TR', 'DIS5K-DIS-VD', 'DUTS-TE', 'DUTS-TR', 'ecssd', 'fss_all', 'HRSOD', 'MSRA_10K', 'ThinObject5K']:
+            if keyword in dataset_info['image_folder']:
+                force_bindary = True
+            
+        dataset = get_image_folder_dataset(dataset_info['image_folder'], dataset_info['label_folder'], resolution, thickness, force_bindary=force_bindary)
 
         return dataset
     
@@ -264,18 +303,21 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
         raise ValueError(f"Dataset type {dataset_info['type']} not supported")
     
 
-def get_image_folder_dataset(image_folder,label_folder, resolution, thickness, image_suffix='jpg', label_suffix='png'):
+def get_image_folder_dataset(image_folder,label_folder, resolution, thickness, image_suffix='jpg', label_suffix='png', force_bindary=False):
     image_files = [x.split('.')[0] for x in os.listdir(image_folder) if x.split('.')[-1] == image_suffix]
     image_ids = [file_name.split('.')[0] for file_name in image_files]
 
     # label_files = [x.split('.')[0] for x in os.listdir(label_folder) if x.split('.')[-1] == label_suffix]
     # label_ids = [file_name.split('.')[0] for file_name in label_files]
 
-    image_ids_with_path = [os.path.join(image_folder, x) for x in image_ids]
-    label_ids_with_path = [os.path.join(label_folder, x) for x in image_ids]
+    image_ids_with_path = sorted([os.path.join(image_folder, x) for x in image_ids])
+    label_ids_with_path = sorted([os.path.join(label_folder, x) for x in image_ids])
 
-    dataset = Dataset.from_dict({"image": sorted(image_ids_with_path), "label": sorted(label_ids_with_path)})
-    dataset.set_transform(lambda x: transforms_image_folders(x, resolution, thickness, image_suffix, label_suffix))
+    dataset = Dataset.from_dict({"image": image_ids_with_path, "label": label_ids_with_path})
+    dataset.set_transform(lambda x: transforms_image_folders(x, resolution, thickness, image_suffix, label_suffix, force_bindary))
+
+    full_image_paths = [id + '.' + image_suffix for id in image_ids_with_path]
+    dataset.image_paths = full_image_paths
 
     return dataset
 
@@ -287,6 +329,12 @@ class LvisDataset(TorchDataset):
         self.image_ids = self.lvis.get_img_ids()
         self.resolution = resolution
         self.thickness = thickness
+
+        self.image_paths = []
+        for img_id in self.image_ids:
+            img_info = self.lvis.load_imgs([img_id])[0]
+            img_path = os.path.join(self.image_dir, img_info['coco_url'].replace('http://images.cocodataset.org/', ''))
+            self.image_paths.append(img_path)
 
     def __len__(self):
         return len(self.image_ids)
@@ -331,6 +379,28 @@ class PartImageNetPP(TorchDataset):
         else:
             self.samples_per_class = 10
 
+        self.image_paths = self.prepare_image_paths()
+
+    def prepare_image_paths(self):
+        image_paths = []
+        for idx in range(len(self)):
+            subset_index = idx // self.samples_per_class
+            img_id = idx % self.samples_per_class
+
+            img_id += 90 if self.split == 'validation' else 0
+
+            coco = self.subsets[subset_index]
+            catIds = coco.getCatIds(catNms=['str'])
+            imgIds = coco.getImgIds(catIds=catIds)
+
+            img = coco.loadImgs(imgIds[img_id - 1])[0]
+            image_name = img['file_name']
+
+            image_path = os.path.join(self.image_dir, image_name)
+            image_paths.append(image_path)
+
+        return image_paths
+
     def __len__(self):
         return self.samples_per_class * len(self.subsets)
 
@@ -372,6 +442,8 @@ class PascalPanopticParts(TorchDataset):
         self.resolution = resolution
         self.thickness = thickness
 
+        self.image_paths = [os.path.join(self.image_dir, sample.split('.')[0]+'.jpg') for sample in self.samples]
+
     def __len__(self):
         return len(self.samples)
     
@@ -404,6 +476,8 @@ class SPIN(TorchDataset):
         self.samples = []
         for sample in os.listdir(self.annotation_path):
             self.samples.append(sample.split('.')[0])
+
+        self.image_paths = [os.path.join(self.image_dir, id.split('_')[0], id+'.JPEG') for id in self.samples]
 
     def __len__(self):
         return len(self.samples)
@@ -477,6 +551,8 @@ class Fashionpedia(TorchDataset):
 
         self.img_ids = self.dataset.getImgIds()
         self.cat_ids = self.dataset.getCatIds()
+
+        self.image_paths = [os.path.join(root, self.split, self.dataset.loadImgs(img_id)[0]['file_name']) for img_id in self.img_ids]
 
     def __len__(self):
         return len(self.img_ids)
@@ -562,6 +638,8 @@ class SeginW():
             for img_id in subset.getImgIds():
                 self.samples.append((subset_name, img_id))
 
+        self.image_paths = [os.path.join(root, subset_name, self.split, self.subsets[subset_name].loadImgs(img_id)[0]['file_name']) for subset_name, img_id in self.samples]
+
     def __len__(self):
         return len(self.samples)
     
@@ -611,6 +689,8 @@ class SOBA(TorchDataset):
                 self.samples += subset_samples[:split_index]
             else:
                 self.samples += subset_samples[split_index:]
+
+        self.image_paths = [os.path.join(root, sample+'.jpg') for sample in self.samples]
 
     def __len__(self):
         return len(self.samples)
@@ -686,6 +766,8 @@ class CelebA(TorchDataset):
                     idx = int(file.split('_')[0])
                     self.annotations[idx].append(os.path.join(root, f'CelebAMask-HQ-mask-anno/{subfolder}', file))
 
+        self.image_paths = [os.path.join(root, f'CelebA-HQ-img/{i}.jpg') for i in range(30000)]
+
     def __len__(self):
         return 30000
     
@@ -705,3 +787,4 @@ class CelebA(TorchDataset):
         boundary = label_map_to_boundary(label_map, self.resolution, self.thickness)
 
         return {'image': image, 'label': boundary}
+    

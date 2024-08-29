@@ -63,11 +63,11 @@ if __name__ == '__main__':
     results['mean_num_tokens'] = np.mean(all_num_tokens)
     print(results)
 
-    results['all_recall'] = all_recall.tolist()
-    results['all_num_tokens'] = all_num_tokens.tolist()
+    results['all_recall'] = all_recall
+    results['all_num_tokens'] = all_num_tokens
 
     # {datetime.now().strftime('%m%d_%H%M')}
-    output_dir = f"outputs/{args.dataset_name}/{args.directsam_ckpt.split('/')[-1]}"
+    output_dir = f"outputs/{args.dataset_name}/{args.directsam_ckpt.split('/')[-1]}-{args.threshold}"
     os.makedirs(output_dir, exist_ok=True)
 
     json.dump(results, open(os.path.join(output_dir, 'results.json'), 'w'), indent=4)

@@ -37,6 +37,30 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
         return get_image_folder_dataset(image_folder, label_folder, resolution, thickness, image_suffix='jpg', label_suffix='png')
     
+    elif dataset_info['type'] == 'LIP':
+        if split == 'validation':
+            return get_image_folder_dataset(
+                os.path.join(dataset_info['root'], 'val_images'), 
+                os.path.join(dataset_info['root'], 'TrainVal_parsing_annotations/val_segmentations'), 
+                resolution, thickness, image_suffix='jpg', label_suffix='png')
+        else:
+            return get_image_folder_dataset(
+                os.path.join(dataset_info['root'], 'train_images'), 
+                os.path.join(dataset_info['root'], 'TrainVal_parsing_annotations/train_segmentations'), 
+                resolution, thickness, image_suffix='jpg', label_suffix='png')
+    
+    elif dataset_info['type'] == 'GTA5':
+        return get_image_folder_dataset(dataset_info['image_folder'], dataset_info['label_folder'], resolution, thickness, image_suffix='png', label_suffix='png')
+    
+    elif dataset_info['type'] == 'CelebA':
+        if split == 'validation':
+            print('Warning: CelebA dataset only supports train split')    
+        return CelebA(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness
+        )
+    
     elif dataset_info['type'] == 'DRAM':
         return DRAM(
             root=dataset_info['root'],
@@ -44,6 +68,7 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
             thickness=thickness,
             split=split
         )
+    
     elif dataset_info['type'] == 'SOBA':
         return SOBA(
             root=dataset_info['root'],
@@ -100,6 +125,16 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
     
     elif dataset_info['type'] == 'LVIS':
         annotation_file = 'lvis_v1_val.json' if split == 'validation' else 'lvis_v1_train.json'
+            
+        return LvisDataset(
+            annotation_path=os.path.join(dataset_info['annotations'], annotation_file),
+            image_dir=dataset_info['image_folder'],
+            resolution=resolution,
+            thickness=thickness
+        )
+    
+    elif dataset_info['type'] == 'PACO':
+        annotation_file = 'paco_lvis_v1_val.json' if split == 'validation' else 'paco_lvis_v1_train.json'
             
         return LvisDataset(
             annotation_path=os.path.join(dataset_info['annotations'], annotation_file),
@@ -636,3 +671,37 @@ class DRAM(TorchDataset):
         return {'image': image, 'label': label}
                 
 
+class CelebA(TorchDataset):
+
+    def __init__(self, root, resolution, thickness):
+
+        self.resolution = resolution
+        self.thickness = thickness
+        self.root = root
+        self.annotations = {i: [] for i in range(30000)}
+
+        for subfolder in range(14):
+            for file in os.listdir(os.path.join(root, f'CelebAMask-HQ-mask-anno/{subfolder}')):
+                if file.endswith('.png'):
+                    idx = int(file.split('_')[0])
+                    self.annotations[idx].append(os.path.join(root, f'CelebAMask-HQ-mask-anno/{subfolder}', file))
+
+    def __len__(self):
+        return 30000
+    
+    def __getitem__(self, idx):
+                
+        image = PILImage.open(os.path.join(self.root, f'CelebA-HQ-img/{idx}.jpg')).convert('RGB')
+        image = resize_image(image, self.resolution)
+
+        label_map = None
+        for i, label_path in enumerate(self.annotations[idx]):
+            label = np.array(PILImage.open(label_path)) > 0
+            if label_map is None:
+                label_map = label * (i + 1)
+            else:
+                label_map += label * (i + 1)
+
+        boundary = label_map_to_boundary(label_map, self.resolution, self.thickness)
+
+        return {'image': image, 'label': boundary}

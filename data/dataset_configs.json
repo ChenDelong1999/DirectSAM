@@ -1,5 +1,18 @@
 {
     
+    "LIP": {
+        "type": "LIP",
+        "root": "/home/dchenbs/workspace/datasets/LIP"
+    },
+    "CelebA": {
+        "type": "CelebA",
+        "root": "/home/dchenbs/workspace/datasets/CelebAMask-HQ"
+    },
+    "GTA5": {
+        "type": "GTA5",
+        "image_folder": "/home/dchenbs/workspace/datasets/GTA5/OpenDataLab___GTA5/raw/images",
+        "label_folder": "/home/dchenbs/workspace/datasets/GTA5/OpenDataLab___GTA5/raw/labels"
+    },
     "DRAM": {
         "type": "DRAM",
         "root": "/home/dchenbs/workspace/datasets/DRAM"
@@ -76,15 +89,25 @@
         "image_folder": "/home/dchenbs/workspace/datasets/coco2017/images",
         "annotations": "/home/dchenbs/workspace/datasets/coco2017/annotations"
     },
+    "PACO": {
+        "type": "PACO",
+        "image_folder": "/home/dchenbs/workspace/datasets/coco2017/images",
+        "annotations": "/home/dchenbs/workspace/datasets/lvis/paco"
+    },
     "LVIS": {
         "type": "LVIS",
         "image_folder": "/home/dchenbs/workspace/datasets/coco2017/images",
-        "annotations": "/home/dchenbs/workspace/datasets/lvis"
+        "annotations": "/home/dchenbs/workspace/datasets/lvis/paco"
     },
     "directsam_pseudo_label": {
         "type": "directsam_pseudo_label",
         "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
-        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_3600px_thr.005_output"
+        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output"
+    },
+    "directsam_pseudo_label_merged": {
+        "type": "directsam_pseudo_label",
+        "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
+        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output_merged"
     },
     "COIFT": {
         "type": "image_folders",

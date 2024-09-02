@@ -16,7 +16,7 @@ class DirectSAM():
         self.resolution = resolution
         self.threshold = threshold
 
-    def __call__(self, image):
+    def __call__(self, image, post_processing=True):
         pixel_values = self.processor(image, return_tensors="pt").pixel_values.to(self.model.device).to(self.model.dtype)
         logits = self.model(pixel_values=pixel_values).logits.float().cpu()
 
@@ -25,15 +25,30 @@ class DirectSAM():
             size=(self.resolution, self.resolution),
             mode="bicubic",
         )
-        probabilities = torch.sigmoid(upsampled_logits)[0,0]
-        boundary = (probabilities > self.threshold).detach().numpy()
-        boundary, num_tokens = self.boundary_post_processing(boundary)
+        probabilities = torch.sigmoid(upsampled_logits)[0,0].detach().numpy()
+        
+        
+        if post_processing:
+            boundary, num_tokens = self.boundary_post_processing(probabilities)
+        else:
+            boundary = probabilities > self.threshold
+            num_tokens = -1
 
         return boundary, num_tokens
 
-    def boundary_post_processing(self, boundary):
+    def boundary_post_processing(self, probabilities):
 
+        kernel_size = self.resolution // 200
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size)).astype(np.float32)
+        kernel /= kernel.sum()
+        
+        probabilities = cv2.filter2D(probabilities, -1, kernel) 
+
+        boundary = probabilities > self.threshold
         boundary = skeletonize(boundary)
+
+        boundary[:kernel_size, :] = boundary[-kernel_size:, :] = boundary[:, :kernel_size] = boundary[:, -kernel_size:] = 1
+
         num_objects, labels = cv2.connectedComponents(
             (1-boundary).astype(np.uint8), 
             connectivity=4, 

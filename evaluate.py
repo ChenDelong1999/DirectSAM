@@ -9,6 +9,7 @@ import pandas as pd
 import tqdm
 
 from evaluation.metrics import recall_with_tolerance
+from evaluation.visualization import compare_boundaries
 from data.create_dataset import create_dataset
 from model.directsam import DirectSAM
 
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_samples', type=int, default=-1)
     parser.add_argument('--threshold', type=float, default=0.01)
     parser.add_argument('--dataset_name', default='PascalPanopticParts')
+    parser.add_argument('--output_dir', default='outputs')
     parser.add_argument('--directsam_ckpt', default='chendelong/DirectSAM-tiny-distilled-15ep-768px-0821')
     args = parser.parse_args()
 
@@ -40,6 +42,11 @@ if __name__ == '__main__':
 
     model = DirectSAM(args.directsam_ckpt, args.resolution, args.threshold, args.device)
 
+    # {datetime.now().strftime('%m%d_%H%M')}
+    output_dir = f"{args.output_dir}/{args.dataset_name}/{'-'.join(args.directsam_ckpt.split('/')[-2:])}/threshold@{args.threshold}"
+    os.makedirs(output_dir, exist_ok=True)
+    date_time = datetime.now().strftime("%m%d-%H%M")
+
     print(args)
     all_num_tokens = []
     all_recall = []
@@ -58,16 +65,46 @@ if __name__ == '__main__':
         all_num_tokens.append(num_tokens)
         all_recall.append(recall)
 
+        if i<5:
+
+            plt.figure(figsize=(15, 15))
+            plt.subplot(2, 2, 1)
+            plt.imshow(image)
+            plt.axis('off')
+            plt.title('Input image')
+            
+            plt.subplot(2, 2, 2)
+            plt.imshow(compare_boundaries(target, prediction, tolerance=tolerance, linewidth=3))
+            plt.title(f'Recall: {recall:.4f}')
+            plt.axis('off')
+
+            plt.subplot(2, 2, 3)
+            plt.imshow(target, cmap='Reds')
+            plt.imshow(image, alpha=0.3)
+            plt.axis('off')
+            plt.title('Ground Truth')
+
+
+            plt.subplot(2, 2, 4)
+            plt.imshow(prediction, cmap='Blues')
+            plt.imshow(image, alpha=0.3)
+            plt.title(f'Prediction ({num_tokens} tokens)')
+            plt.axis('off')
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(output_dir, f'{i:07d}.png'))
+
     results = vars(args)
     results['mean_recall'] = np.mean(all_recall)
     results['mean_num_tokens'] = np.mean(all_num_tokens)
-    print(results)
+
+    df = pd.DataFrame.from_dict(results, orient='index')
+    # transpose this df
+    df = df.T
+    df.to_csv(os.path.join(output_dir, f'results-{date_time}.csv'), sep='\t', index=False)
+    print(df)
 
     results['all_recall'] = all_recall
     results['all_num_tokens'] = all_num_tokens
 
-    # {datetime.now().strftime('%m%d_%H%M')}
-    output_dir = f"outputs/{args.dataset_name}/{args.directsam_ckpt.split('/')[-1]}-{args.threshold}"
-    os.makedirs(output_dir, exist_ok=True)
-
-    json.dump(results, open(os.path.join(output_dir, 'results.json'), 'w'), indent=4)
+    json.dump(results, open(os.path.join(output_dir, f'results-{date_time}.json'), 'w'), indent=4)

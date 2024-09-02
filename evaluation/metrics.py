@@ -1,7 +1,5 @@
 import numpy as np
 import cv2
-import torch
-from torch.nn import functional as F
 
 
 def recall_with_tolerance(target, prediction, tolerance):
@@ -9,6 +7,7 @@ def recall_with_tolerance(target, prediction, tolerance):
     if np.sum(target) == 0:
         return 1.0
 
+    # Boundary zero padding (BZP)
     target[:tolerance, :] = target[-tolerance:, :] = target[:, :tolerance] = target[:, -tolerance:] = 0
     prediction[:tolerance, :] = prediction[-tolerance:, :] = prediction[:, :tolerance] = prediction[:, -tolerance:] = 0
 
@@ -18,4 +17,6 @@ def recall_with_tolerance(target, prediction, tolerance):
 
     true_positive = np.sum(target * prediction_blured)
 
-    return true_positive / np.sum(target)
+    recall = true_positive / np.sum(target)
+
+    return recall if not np.isnan(recall) else 0.0

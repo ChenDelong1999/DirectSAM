@@ -1,6 +1,4 @@
-# DirectSAM Self-Training
-
-Pseudo Labeling
+### DirectSAM Pseudo Labeling on SA-1B
 
 
 ```bash
@@ -29,25 +27,113 @@ done
 
 ```
 
+### Pseudo Labeling and annotation merging on other datasets
 
-Self-training
+```bash
+
+datasets=(
+    # "LIP"
+    # "CelebA"
+    # "SOBA"
+    # "SeginW"
+
+    # "CIHP"
+    # "Fashionpedia"
+    # "PascalPanopticParts"
+    # "SPIN"
+
+    # "PartImageNet++"
+    # "ADE20k"
+    # "EntitySeg"
+    # "LoveDA"
+
+    # "COCONut-s"
+    # "COCONut-b"
+    "COCONut-l"
+
+    # "PACO"
+    # "LVIS"
+    # "COIFT"
+    # "DIS5K-DIS-TR"
+    # "DUTS-TR"
+
+    # "ecssd"
+    # "fss_all"
+    # "HRSOD"
+    # "MSRA_10K"
+    # "ThinObject5K"
+)
+
+
+cd /home/dchenbs/workspace/DirectSAM
+conda activate subobject
+for dataset in $datasets; do
+
+    echo -e ">>> All Datasets to Run: $datasets\n\n>>> Current Dataset: $dataset\n"
+    
+    CUDA_VISIBLE_DEVICES=5 python pseudo_labeling_merge.py \
+        --checkpoint "chendelong/DirectSAM-1800px-0424" \
+        --resolution 1800 --threshold 0.5 \
+        --dataset $dataset --thickness 3 \
+        --output_dir "/home/dchenbs/workspace/datasets/DirectSAPlus/DirectSAM-1800px-0424" \
+        --samples -1
+done
+
+
+    # --do_post_processing \
+```
+
+
+### Self-training
+
 ```bash
 
 export NCCL_P2P_LEVEL=NVL
 
 cd /home/dchenbs/workspace/DirectSAM
 conda activate subobject
-CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node 2 --master_port 29510 train.py \
-    --pretrained "chendelong/DirectSAM-1800px-0424" \
-    --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
-    --learning_rate 5e-5 \
+CUDA_VISIBLE_DEVICES=2,3,4,5 torchrun --nproc_per_node 4 --master_port 29510 train.py \
+    --pretrained "nvidia/segformer-b0-finetuned-cityscapes-1024-1024" \
+    --per_device_train_batch_size 16 --gradient_accumulation_steps 4 \
+    --learning_rate 1e-4 \
     --dataset directsam_pseudo_label_merged \
-    --num_train_epochs 1 \
+    --num_train_epochs 30 \
     --input_resolution 1024 --thickness 3 \
     --dataloader_num_workers 16 --dataloader_prefetch_factor 8
     
 ```
 
+```bash
+# 1024px input resolution
+
+    # 3.7M Parameters, 75.3G CUDA Memory, ~7 hours/epoch with 2 GPU
+    --pretrained "nvidia/segformer-b0-finetuned-cityscapes-1024-1024" \
+    --per_device_train_batch_size 32 --gradient_accumulation_steps 1 \
+
+    # 13.6M Parameters, 49.3G CUDA Memory, ~8 hours/epoch with 2 GPU
+    --pretrained "nvidia/segformer-b1-finetuned-cityscapes-1024-1024" \
+    --per_device_train_batch_size 16 --gradient_accumulation_steps 2 \
+
+    # 27.3M Parameters, 45.7G CUDA Memory, ~13 hours/epoch with 2 GPU
+    --pretrained "nvidia/segformer-b2-finetuned-cityscapes-1024-1024" \
+    --per_device_train_batch_size 8 --gradient_accumulation_steps 4 \
+
+    # 47.2M Parameters, 60.3G CUDA Memory, ~17 hours/epoch with 2 GPU
+    --pretrained "nvidia/segformer-b3-finetuned-cityscapes-1024-1024" \
+    --per_device_train_batch_size 8 --gradient_accumulation_steps 4 \
+
+    # 64.0M Parameters, 43.3G CUDA Memory, ~25 hours/epoch with 2 GPU
+    --pretrained "nvidia/segformer-b4-finetuned-cityscapes-1024-1024" \
+    --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
+
+    # 84.6M Parameters, 49.7G CUDA Memory, ~28 hours/epoch with 2 GPU
+    --pretrained "nvidia/segformer-b5-finetuned-cityscapes-1024-1024" \
+    --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
+
+    --pretrained "chendelong/DirectSAM-1800px-0424" \
+    --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
+
+```
 
 
 # Evaluation
@@ -73,6 +159,10 @@ thresholds=(
     0.3
     0.4
     0.5
+    0.6
+    0.7
+    0.8
+    0.9
 )
 
 ckpts=(
@@ -81,30 +171,46 @@ ckpts=(
     # "chendelong/DirectSAM-tiny-distilled-10ep-1024px-0726"
     # "chendelong/DirectSAM-tiny-distilled-15ep-768px-0821"
     # "runs/directsam_pseudo_label_merged/0828-2024-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-28000"
-    # "/home/dchenbs/workspace/DirectSAM/runs/directsam_pseudo_label_merged/0829-1210-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-6000"
+
+    # "runs/directsam_pseudo_label_merged/0902-1230-1024px-from-nvidia_segformer-b0-finetuned-cityscapes-1024-1024/checkpoint-9000"
 )
 
 datasets=(
-    "PascalPanopticParts"
-    "EntitySeg"
+    # "PascalPanopticParts"
     # "ADE20k"
-    # "COCONut_relabeld_COCO_val"
-    # "LoveDA"
+    "COCONut_relabeld_COCO_val"
+    "EntitySeg"
+
+    # "LIP"
+    # "DRAM"
+    # "SOBA"
+    # "SeginW"
+    # "CIHP"
+    # "Fashionpedia"
+    # "SPIN"
+
     # "PartImageNet++"
+    # "LoveDA"
+    # "PACO"
+    # "DIS5K-DIS-VD"
+    # "DUTS-TE"
 )
 
 cd /home/dchenbs/workspace/DirectSAM
 conda activate subobject
-for dataset in $datasets; do
-    for ckpt in $ckpts; do
+for ckpt in $ckpts; do
+    for dataset in $datasets; do
+        for threshold in $thresholds; do
 
-    CUDA_VISIBLE_DEVICES=0 python evaluate.py \
-        --dataset_name $dataset \
-        --directsam_ckpt $ckpt \
-        --resolution 1024 \
-        --n_samples 100 \
-        --threshold 0.5
+            CUDA_VISIBLE_DEVICES=4 python evaluate.py \
+                --dataset_name $dataset \
+                --directsam_ckpt $ckpt \
+                --resolution 1024 \
+                --n_samples 1000 \
+                --threshold $threshold \
+                --output_dir "outputs/eval_token_recall"
 
+        done
     done
 done
 

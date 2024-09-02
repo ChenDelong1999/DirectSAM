@@ -72,7 +72,7 @@ if __name__=='__main__':
         output_dir=f"runs/{args.dataset}/{datetime.datetime.now().strftime('%m%d-%H%M')}-{args.input_resolution}px-from-{args.pretrained.replace('/', '_')}",
         
         learning_rate=args.learning_rate,
-        warmup_steps=2000,
+        warmup_steps=1000,
         lr_scheduler_type='cosine',
 
         num_train_epochs=args.num_train_epochs,
@@ -81,7 +81,7 @@ if __name__=='__main__':
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         
         save_total_limit=20,
-        save_steps=2000,
+        save_steps=1000,
         save_strategy="steps",
 
         dataloader_num_workers=args.dataloader_num_workers,

@@ -115,6 +115,10 @@
         "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
         "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output_merged"
     },
+    "directsa_plus": {
+        "type": "directsa_plus",
+        "root": "/home/dchenbs/workspace/datasets/DirectSAPlus/DirectSAM-1800px-0424"
+    },
     "COIFT": {
         "type": "image_folders",
         "image_folder": "/home/dchenbs/workspace/datasets/sam-hq-training/data/COIFT/images",

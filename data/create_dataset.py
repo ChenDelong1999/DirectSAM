@@ -6,6 +6,8 @@ import numpy as np
 from datasets import Dataset, load_dataset
 from torchvision.datasets import CocoDetection
 
+from .transforms import boundary_thinning
+from pycocotools.mask import decode, frPyObjects
 from lvis import LVIS
 from pycocotools.coco import COCO
 from torch.utils.data import Dataset as TorchDataset
@@ -208,6 +210,17 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
         return dataset
     
+    elif dataset_info['type'] == 'directsa_plus':
+
+        if split == 'validation':
+            print('Warning: directsa_plus dataset only supports train split')
+
+        return DirectSAPlus(
+            root=dataset_info['root'],
+            resolution=resolution,
+            thickness=thickness
+        )
+
     elif dataset_info['type'] == 'huggingface_dataset': # ade_20k
         
         dataset = load_dataset(dataset_info['id'], split=split) # ['train', 'test', 'validation']
@@ -760,7 +773,7 @@ class CelebA(TorchDataset):
         self.root = root
         self.annotations = {i: [] for i in range(30000)}
 
-        for subfolder in range(14):
+        for subfolder in range(15):
             for file in os.listdir(os.path.join(root, f'CelebAMask-HQ-mask-anno/{subfolder}')):
                 if file.endswith('.png'):
                     idx = int(file.split('_')[0])
@@ -788,3 +801,40 @@ class CelebA(TorchDataset):
 
         return {'image': image, 'label': boundary}
     
+
+class DirectSAPlus(TorchDataset):
+
+    def __init__(self, root, resolution, thickness):
+
+        self.resolution = resolution
+        self.thickness = thickness
+        self.root = root
+
+        # self.subsets = ['Merged']
+        self.subsets = os.listdir(root)
+        self.subsets.sort()
+        self.samples = []
+
+        for subset in self.subsets:
+            files = os.listdir(os.path.join(root, subset))
+            files = [x for x in files if x.endswith('.json') and not x.startswith('_')]
+            print(f'{len(files)} samples:\t{subset}')
+            for file in files:
+                self.samples.append(os.path.join(subset, file))
+
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+
+        file = self.samples[idx]
+        sample = json.load(open(os.path.join(self.root, file), 'r'))
+
+        image = PILImage.open(sample['image_path']).convert('RGB')
+        image = resize_image(image, self.resolution)
+
+        label = decode(sample['merged'])
+        label = resize_image(label, self.resolution)
+        # label = boundary_thinning(label, self.thickness)
+
+        return {'image': image, 'label': label}

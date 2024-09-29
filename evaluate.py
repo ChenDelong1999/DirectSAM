@@ -13,6 +13,8 @@ from evaluation.visualization import compare_boundaries
 from data.create_dataset import create_dataset
 from model.directsam import DirectSAM
 
+import time
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_configs', default='data/dataset_configs.json')
@@ -22,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--threshold', type=float, default=0.01)
     parser.add_argument('--dataset_name', default='PascalPanopticParts')
     parser.add_argument('--output_dir', default='outputs')
+    parser.add_argument('--sleep_interval', type=float, default=0)
     parser.add_argument('--directsam_ckpt', default='chendelong/DirectSAM-tiny-distilled-15ep-768px-0821')
     args = parser.parse_args()
 
@@ -51,6 +54,8 @@ if __name__ == '__main__':
     all_num_tokens = []
     all_recall = []
     for i in tqdm.tqdm(range(args.n_samples)):
+        if args.sleep_interval > 0:
+            time.sleep(args.sleep_interval)
         sample = dataset[i]
 
         if type(sample) == dict:

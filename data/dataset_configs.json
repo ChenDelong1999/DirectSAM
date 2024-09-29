@@ -110,10 +110,20 @@
         "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
         "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output"
     },
+    "directsam_pseudo_label_legacy": {
+        "type": "directsam_pseudo_label",
+        "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
+        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_3600px_thr.005_output"
+    },
     "directsam_pseudo_label_merged": {
         "type": "directsam_pseudo_label",
         "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
         "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output_merged"
+    },
+    "directsam_pseudo_label_merged_denoised": {
+        "type": "directsam_pseudo_label",
+        "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
+        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output_merged_denoised"
     },
     "directsa_plus": {
         "type": "directsa_plus",

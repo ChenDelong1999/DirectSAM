@@ -7,8 +7,8 @@ from skimage.morphology import skeletonize
 
 
 def boundary_thinning(boundary, thickness=2):
-    boundary = skeletonize(boundary).astype(np.uint8)
     if thickness > 1:
+        boundary = skeletonize(boundary).astype(np.uint8)
         boundary = cv2.dilate(boundary, np.ones((thickness, thickness), np.uint8))
     return boundary
 

@@ -21,107 +21,80 @@ def resize_image(image, resolution):
     else:
         raise ValueError(f"Unknown input type: {type(image)}")
 
+import cv2
+import numpy as np
 
-def masks_to_boundary(masks, thickness=3):
-    """
-    Parameters:
-    masks (numpy array): The input masks. Shape: (num_masks, height, width).
-    thickness (int): The size of the kernel used for dilation and erosion.
+import cv2
+import numpy as np
 
-    Returns:
-    numpy array: The output binary boundary label image. Shape: (height, width).
-    """
-    kernel = np.ones((thickness, thickness), np.uint8)
+# Initialize the round kernel once
+def create_circular_kernel(size):
+    kernel = np.zeros((size, size), np.uint8)
+    center = size // 2
+    cv2.circle(kernel, (center, center), center, 1, -1)
+    return kernel
 
-    masks = masks.astype(np.uint8)
-
-    dilated = np.array([cv2.dilate(mask, kernel) for mask in masks])
-    eroded = np.array([cv2.erode(mask, kernel) for mask in masks])
-
-    boundaries = dilated - eroded
-    boundaries = np.sum(boundaries, axis=0)
-
-    return boundaries > 0
+# Global circular kernel
+CIRCULAR_KERNEL = create_circular_kernel(3)
 
 
-def label_map_to_boundary(label_map, resolution, thickness=3, force_bindary=False):
-    """
-    Parameters:
-    label_map (PIL.Image or numpy array): The input label map (single channel).
-    resolution (int): The resolution of the output label map.
-    thickness (int): The size of the kernel used for dilation and erosion.
-
-    Returns:
-    PIL.Image: The output binary boundary label image.
-    """
+def preprocess_label_map(label_map, resolution, label_map_mode=''):
 
     label_map = np.array(label_map)
-    if force_bindary:
-        theshold = label_map.max() / 2
-        label_map = (label_map > theshold).astype(np.uint8)
+    
+    if label_map_mode=='single_channel':
+        pass
 
-    # avoid using PIL.Image.convert("L") 
+    elif label_map_mode=='force_binary':
+        threshold = label_map.max() / 2
+        label_map = (label_map > threshold).astype(np.uint8)
+
+    elif label_map_mode=='rgb':
+        label_map = cv2.cvtColor(label_map, cv2.COLOR_RGB2GRAY)
+
+    else:
+        raise ValueError(f"Unknown label_map_mode: {label_map_mode}")
+
+
     if len(label_map.shape) == 3:
         label_map = label_map[:, :, 0]
+        
+    label_map = cv2.resize(
+        label_map, (resolution, resolution), 
+        interpolation=cv2.INTER_NEAREST
+        )
 
-    masks = []
-    for label_idx in np.unique(label_map):
-        mask = (label_map == label_idx).astype(np.uint8)
-        mask = cv2.resize(mask, (resolution, resolution))
-
-        masks.append(mask)
-
-    masks = np.array(masks)
-    boundary = masks_to_boundary(masks, thickness)
-
-    return boundary
+    return label_map
 
 
-def transforms_huggingface_dataset(example_batch, resolution, thickness):
-    images = [resize_image(x.convert("RGB"), resolution) for x in example_batch["image"]]
-    labels = [label_map_to_boundary(x, resolution, thickness) for x in example_batch["annotation"]]
-    return {'image': images, 'label': labels}
+def label_map_to_boundary(label_map, thickness=3):
+
+    global CIRCULAR_KERNEL
+    
+    if thickness != CIRCULAR_KERNEL.shape[0]:
+        CIRCULAR_KERNEL = create_circular_kernel(thickness)
+
+    unique_labels = np.unique(label_map)
+    masks = (label_map[..., np.newaxis] == unique_labels).astype(np.uint8)
+
+    dilated = cv2.dilate(masks, CIRCULAR_KERNEL)
+    eroded = cv2.erode(masks, CIRCULAR_KERNEL)
+    boundaries = dilated - eroded
+
+    if len(boundaries.shape) == 2:
+        boundaries = boundaries[..., np.newaxis]
+    boundaries = np.any(boundaries, axis=-1).astype(bool)
+
+    boundaries[:thickness, :] = boundaries[-thickness:, :] = 1
+    boundaries[:, :thickness] = boundaries[:, -thickness:] = 1
+
+    return boundaries
 
 
-def transforms_image_folders(example_batch, resolution, thickness, image_suffix='jpg', label_suffix='png', force_bindary=False):
-    image_suffix = '.' + image_suffix if image_suffix else ''
-    label_suffix = '.' + label_suffix if label_suffix else ''
-    images = [resize_image(PILImage.open(x+image_suffix).convert("RGB"), resolution) for x in example_batch["image"]]
-    labels = [label_map_to_boundary(PILImage.open(x+label_suffix), resolution, thickness, force_bindary) for x in example_batch["label"]]
-    return {'image': images, 'label': labels}
 
-
-def transforms_coco_single_sample(image, annotations, resolution, thickness):
-    masks = np.zeros((image.size[1], image.size[0]), dtype=np.uint8)
-    for i, annotation in enumerate(annotations):
-        rles = frPyObjects(annotation['segmentation'], image.size[1], image.size[0])
-        mask = decode(rles)
-        if len(mask.shape) == 3:
-            mask = mask.sum(axis=2)
-        masks += mask * (i + 1)
-    label = label_map_to_boundary(masks, resolution, thickness)
-    image = resize_image(image, resolution)
-    return image, label
-
-
-def transforms_entity_seg(example_batch, resolution, thickness):
-
-    def decode_and_merge_rle_annotations(annotations):
-        masks = decode(annotations[0])
-        for i in range(1, len(annotations)):
-            masks += decode(annotations[i])*(i+1)
-        return masks
-
-    images = [resize_image(PILImage.open(x), resolution) for x in example_batch["image"]]
-    labels = [label_map_to_boundary(decode_and_merge_rle_annotations(x), resolution, thickness) for x in example_batch["label"]]
-
-    return {'image': images, 'label': labels}
-
-
-def transforms_directsam_pseudo_label(example_batch, resolution, thickness):
-    images = [resize_image(PILImage.open(x), resolution) for x in example_batch["image"]]
-    # labels = [resize_image(decode(json.load(open(x))), resolution) for x in example_batch["label"]]
-    labels = [boundary_thinning(resize_image(decode(json.load(open(x))), resolution), thickness) for x in example_batch["label"]]
-
-    return {'image': images, 'label': labels}
+def transforms_for_labelmap_dataset(batch, resolution, thickness, label_map_mode='single_channel'):
+    image = [resize_image(x.convert("RGB"), resolution) for x in batch["image"]]
+    label_map = [preprocess_label_map(x, resolution, label_map_mode) for x in batch["annotation"]]
+    labels = [label_map_to_boundary(x, thickness) for x in label_map]
+    return {'image': image, 'label': labels, 'label_map': label_map}
 

@@ -124,14 +124,14 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
             resolution=resolution,
             thickness=thickness
         )
+    
     elif dataset_info['type'] == 'Fashionpedia':
         return Fashionpedia(
             root=dataset_info['root'],
             resolution=resolution,
             thickness=thickness,
             split=split
-        )
-    
+        ) 
 
     elif dataset_info['type'] == 'PartIT':
             
@@ -175,7 +175,7 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
     elif dataset_info['type'] == 'PascalPanopticParts':
 
         return PascalPanopticParts(
-            annotation_path=dataset_info['annotations'],
+            annotation_path=dataset_info['label_folder'],
             image_dir=dataset_info['image_folder'],
             resolution=resolution,
             thickness=thickness,
@@ -299,7 +299,7 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
 
         return dataset
     
-    elif dataset_info['type'] == 'image_folders':
+    elif dataset_info['type'] == 'folders':
 
         print('Warning: "split" argument is ignored for image_folders datasets')
 

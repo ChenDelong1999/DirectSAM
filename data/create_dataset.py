@@ -8,6 +8,11 @@ from .transforms import transforms_for_labelmap_dataset
 
 def create_dataset(dataset_info, split, resolution, thickness=3):
 
+    if dataset_info['type'] == 'DSA':
+        return DSADataset(**dataset_info, resolution=resolution)
+    
+    # belowings are all label map-based datasets
+
     assert split in ['train', 'validation']
 
     label_map_mode = 'single_channel'
@@ -95,8 +100,6 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
     else:
         print(f"Unknown dataset type: {dataset_info['type']}")
     
-
-
     dataset.set_transform(
         lambda x: transforms_for_labelmap_dataset(
             x, resolution, thickness, label_map_mode

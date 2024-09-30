@@ -20,11 +20,10 @@ parser.add_argument("--resolution", type=int, help="Resolution of DirectSAM mode
 parser.add_argument("--threshold", type=float, help="Threshold value for segmentation")
 parser.add_argument("--samples", type=int, default=-1, help="Number of samples to use")
 parser.add_argument("--thickness", type=int, default=5, help="Thickness of the boundary")
-parser.add_argument("--do_post_processing", action='store_true', help="Whether to do post processing")
 
 args = parser.parse_args()
 
-model = DirectSAM(args.checkpoint, args.resolution, args.threshold, 'cuda')
+model = DirectSAM(args.checkpoint, args.resolution, 'cuda')
 
 args.output_dir = os.path.join(args.output_dir, os.path.basename(args.dataset))
 os.makedirs(args.output_dir, exist_ok=True)
@@ -49,31 +48,27 @@ for i in tqdm.tqdm(range(args.samples)):
         image_size = Image.open(image_path).size
 
         sample = dataset[i]
-        if type(sample) == dict:
-            image = sample['image']
-            target = sample['label']
-        else:
-            image, target = sample
+        image = sample['image']
+        human_label = sample['label']
 
-        prediction, num_tokens = model(image, post_processing=args.do_post_processing)
-        merged = (prediction + target) > 0
+        probabilities = model(image)
+        pseudo_label = probabilities > args.threshold
 
-        rle_prediction = encode(np.array(prediction, order='F', dtype=np.uint8))
+        rle_prediction = encode(np.array(pseudo_label, order='F', dtype=np.uint8))
         rle_prediction['counts'] = rle_prediction['counts'].decode('utf-8')
 
-        rel_target = encode(np.array(target, order='F', dtype=np.uint8))
-        rel_target['counts'] = rel_target['counts'].decode('utf-8')
-
-        rle_merged = encode(np.array(merged, order='F', dtype=np.uint8))
-        rle_merged['counts'] = rle_merged['counts'].decode('utf-8')
+        rel_human_label = encode(np.array(human_label, order='F', dtype=np.uint8))
+        rel_human_label['counts'] = rel_human_label['counts'].decode('utf-8')
 
         result = {}
         result['image_path'] = image_path
         result['image_size'] = image_size
         result['info'] = vars(args)
-        result['prediction'] = rle_prediction
-        result['target'] = rel_target
-        result['merged'] = rle_merged
+        result['pseudo_label'] = rle_prediction
+        result['human_label'] = [{
+            'source': args.dataset,
+            'label': rel_human_label
+            }]
 
         with open(output_file, 'w') as f:
             json.dump(result, f, indent=4)

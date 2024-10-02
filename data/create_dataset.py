@@ -31,10 +31,14 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
         if 'GTA' in dataset_info['image_folder'] and split == 'validation':
                 print('GTA-V dataset only supports train split')
 
-    elif dataset_info['type'] == 'huggingface_dataset': # ade_20k
+    elif dataset_info['type'] == 'huggingface_dataset':
         dataset = load_dataset(dataset_info['id'], split=split) 
-        images = os.listdir(dataset_info['image_folder'])
-        dataset.image_paths = [os.path.join(dataset_info['image_folder'], x) for x in images]
+        
+        if os.path.exists(dataset_info['image_folder']):
+            images = os.listdir(dataset_info['image_folder'])
+            dataset.image_paths = [os.path.join(dataset_info['image_folder'], x) for x in images]
+        else:
+            dataset.image_paths = []
     
     elif dataset_info['type'] == "COCONut-l":
         if split == 'validation':
@@ -102,7 +106,8 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
     
     dataset.set_transform(
         lambda x: transforms_for_labelmap_dataset(
-            x, resolution, thickness, label_map_mode
+            batch=x, resolution=resolution, thickness=thickness, label_map_mode=label_map_mode,
+            **dataset_info
             ))
 
     return dataset

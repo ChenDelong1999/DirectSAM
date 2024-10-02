@@ -34,7 +34,7 @@ args.samples = len(dataset) if args.samples == -1 else args.samples
 args.timestamp = datetime.datetime.now().strftime("%Y%m%d-%H:%M")
 print(args)
 
-index_mapping = np.random.permutation(len(dataset))
+index_mapping = np.random.permutation(min(args.samples, len(dataset)))
 for i in tqdm.tqdm(range(args.samples)):
 
     i = int(index_mapping[i])
@@ -64,7 +64,10 @@ for i in tqdm.tqdm(range(args.samples)):
         result['image_path'] = image_path
         result['image_size'] = image_size
         result['info'] = vars(args)
-        result['pseudo_label'] = rle_prediction
+        result['pseudo_label'] = [{
+            'source': args.checkpoint,
+            'label': rle_prediction
+            }]
         result['human_label'] = [{
             'source': args.dataset,
             'label': rel_human_label

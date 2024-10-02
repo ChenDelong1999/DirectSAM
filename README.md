@@ -52,23 +52,33 @@ datasets=(
 	# "CelebA"  	            # 30000
 	# "CIHP"  	            # 28280
 	# "ADE20k"  	            # 20210
-	"SeginW"  	            # 10639
-	"DUTS-TR"  	            # 10553
-	"fss_all"  	            # 10000
-	"MSRA_10K"  	        # 10000
-	"GTA5"  	            # 10000
-	"SPIN"  	            # 8828
-	"PascalPanopticParts"  	# 4998
-	"ThinObject5K"  	    # 4748
-	"DIS5K-DIS-TR"  	    # 3000
-	"LoveDA"  	            # 2522
-	"SUIM"  	            # 1221
-	"ecssd"  	            # 1000
-	"SOBA"  	            # 933
-	"MyFood"  	            # 750
-	"COIFT"  	            # 280
-	"HRSOD"  	            # 287
+	# "SeginW"  	            # 10639
+	# "DUTS-TR"  	            # 10553
+	# "fss_all"  	            # 10000
+	# "MSRA_10K"  	        # 10000
+	# "GTA5"  	            # 10000
+	# "SPIN"  	            # 8828
+	# "PascalPanopticParts"  	# 4998
+	# "ThinObject5K"  	    # 4748
+	# "DIS5K-DIS-TR"  	    # 3000
+	# "LoveDA"  	            # 2522
+	# "SUIM"  	            # 1221
+	# "ecssd"  	            # 1000
+	# "SOBA"  	            # 933
+	# "MyFood"  	            # 750
+	# "COIFT"  	            # 280
+	# "HRSOD"  	            # 287
+	# "plantorgans"			# 5745
+	# "FoodSeg103"			# 4983
+	# "tcd"					# 4169
+	# "VegAnn"				# 3775
+	# "cityscapes"			# 2975
+	# "sidewalk"				# 1000
+	# "NYUDepthv2"			# 795
+
+	"SA1B"					# 318557
 )
+
 
 cd /home/dchenbs/workspace/DirectSAM
 conda activate subobject
@@ -76,12 +86,12 @@ for dataset in $datasets; do
 
     echo -e ">>> All Datasets to Run: $datasets\n\n>>> Current Dataset: $dataset\n"
     
-    CUDA_VISIBLE_DEVICES=4 python pseudo_labeling.py \
+    CUDA_VISIBLE_DEVICES=1 python pseudo_labeling.py \
         --dataset $dataset \
         --checkpoint "chendelong/DirectSAM-1800px-0424" \
         --resolution 1800 --threshold 0.5 --thickness 9 \
         --output_dir "/home/dchenbs/workspace/datasets/DSA/DirectSAM-1800px-0424" \
-        --samples -1
+        --samples 318557
 done
 
 

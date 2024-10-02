@@ -19,10 +19,61 @@
         "type": "SA1B",
         "root": "/home/dchenbs/workspace/datasets/sa1b"
     },
+    "cityscapes": {
+        "type": "huggingface_dataset",
+        "id": "Chris1/cityscapes",
+        "image_folder": "/home/dchenbs/workspace/datasets/HF_SEG_Dataset_Images/cityscapes/train",
+        "image_key": "image",
+        "annotation_key": "semantic_segmentation"
+    },
+    "plantorgans": {
+        "type": "huggingface_dataset",
+        "id": "farmaieu/plantorgans",
+        "image_folder": "/home/dchenbs/workspace/datasets/HF_SEG_Dataset_Images/plantorgans/train",
+        "image_key": "image",
+        "annotation_key": "label"
+    },
+    "NYUDepthv2": {
+        "type": "huggingface_dataset",
+        "id": "wyrx/NYUDepthv2_seg",
+        "image_folder": "/home/dchenbs/workspace/datasets/HF_SEG_Dataset_Images/NYUDepthv2/train",
+        "image_key": "image",
+        "annotation_key": "label"
+    },
+    "VegAnn": {
+        "type": "huggingface_dataset",
+        "id": "simonMadec/VegAnn",
+        "image_folder": "/home/dchenbs/workspace/datasets/HF_SEG_Dataset_Images/VegAnn/train",
+        "image_key": "image",
+        "annotation_key": "mask"
+    },
+    "tcd": {
+        "type": "huggingface_dataset",
+        "id": "restor/tcd",
+        "image_folder": "/home/dchenbs/workspace/datasets/HF_SEG_Dataset_Images/tcd/train",
+        "image_key": "image",
+        "annotation_key": "annotation"
+    },
+    "sidewalk": {
+        "type": "huggingface_dataset",
+        "id": "segments/sidewalk-semantic",
+        "image_folder": "/home/dchenbs/workspace/datasets/HF_SEG_Dataset_Images/sidewalk/train",
+        "image_key": "pixel_values",
+        "annotation_key": "label"
+    },
+    "FoodSeg103": {
+        "type": "huggingface_dataset",
+        "id": "EduardoPacheco/FoodSeg103",
+        "image_folder": "/home/dchenbs/workspace/datasets/HF_SEG_Dataset_Images/FoodSeg103/train",
+        "image_key": "image",
+        "annotation_key": "label"
+    },
     "ADE20k": {
         "type": "huggingface_dataset",
         "id": "scene_parse_150",
-        "image_folder": "/home/dchenbs/workspace/datasets/ADE20k/train"
+        "image_folder": "/home/dchenbs/workspace/datasets/ADE20k/train",
+        "image_key": "image",
+        "annotation_key": "annotation"
     },
     "COCONut_relabeld_COCO_val": {
         "type": "folders",

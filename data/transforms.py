@@ -92,9 +92,9 @@ def label_map_to_boundary(label_map, thickness=3):
 
 
 
-def transforms_for_labelmap_dataset(batch, resolution, thickness, label_map_mode='single_channel'):
-    image = [resize_image(x.convert("RGB"), resolution) for x in batch["image"]]
-    label_map = [preprocess_label_map(x, resolution, label_map_mode) for x in batch["annotation"]]
+def transforms_for_labelmap_dataset(batch, resolution, thickness, image_key="image", annotation_key="annotation", label_map_mode='single_channel', **kwargs):
+    image = [resize_image(x.convert("RGB"), resolution) for x in batch[image_key]]
+    label_map = [preprocess_label_map(x, resolution, label_map_mode) for x in batch[annotation_key]]
     labels = [label_map_to_boundary(x, thickness) for x in label_map]
     return {'image': image, 'label': labels, 'label_map': label_map}
 

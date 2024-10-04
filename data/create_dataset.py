@@ -9,7 +9,7 @@ from .transforms import transforms_for_labelmap_dataset
 def create_dataset(dataset_info, split, resolution, thickness=3, do_augmentation=False):
 
     if dataset_info['type'] == 'DSA':
-        return DSADataset(**dataset_info, split=split, resolution=resolution)
+        return DSADataset(**dataset_info, split=split, resolution=resolution, do_augmentation=do_augmentation)
     
     # belowings are all label map-based datasets
 

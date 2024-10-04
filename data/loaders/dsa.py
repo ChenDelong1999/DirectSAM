@@ -4,16 +4,26 @@ import cv2
 from PIL import Image
 import numpy as np
 from pycocotools.mask import decode
+from torchvision import transforms
+import torch
+
+augmentation = transforms.RandomApply(torch.nn.ModuleList([
+    transforms.GaussianBlur(3, sigma=(0.1, 2.0)),
+    transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),
+    transforms.RandomGrayscale(p=0.2),
+    ]), p=0.25)
+
 
 class DSADataset():
 
-    def __init__(self, root, label, resolution, split, pseudo_label="chendelong/DirectSAM-1800px-0424", **kwargs):
+    def __init__(self, root, label, resolution, split, pseudo_label="chendelong/DirectSAM-1800px-0424", do_augmentation=False, **kwargs):
 
         self.root = root
         self.label = label
         self.resolution = resolution
         self.pseudo_label = pseudo_label
         self.split = split
+        self.do_augmentation = do_augmentation
 
         assert self.label in ['merged', 'pseudo', 'human']
 
@@ -80,6 +90,9 @@ class DSADataset():
 
         image = Image.open(sample['image_path']).convert('RGB')
         image = image.resize((self.resolution, self.resolution))
+
+        if self.do_augmentation:
+            image = augmentation(image)
 
         if self.label == 'pseudo':
             label = self.get_pseudo_label(sample)

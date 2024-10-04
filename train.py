@@ -81,14 +81,15 @@ if __name__=='__main__':
         per_device_train_batch_size=args.per_device_train_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         
-        save_total_limit=20,
-        save_steps=2000,
+        save_total_limit=50,
+        save_steps=1000,
         save_strategy="steps",
 
         dataloader_num_workers=args.dataloader_num_workers,
         dataloader_prefetch_factor=args.dataloader_prefetch_factor,
         
-        do_eval=True,
+        eval_on_start=False,
+        do_eval=False,
         evaluation_strategy='steps',
         eval_steps=10000,
 

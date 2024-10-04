@@ -114,7 +114,7 @@ CUDA_VISIBLE_DEVICES=4,5 torchrun --nproc_per_node 2 --master_port 29512 train.p
     --per_device_train_batch_size 1 --gradient_accumulation_steps 16 \
     --learning_rate 1e-4 \
     --dataset DSA_merged \
-    --num_train_epochs 3 \
+    --num_train_epochs 1 \
     --input_resolution 1700 \
     --dataloader_num_workers 16 --dataloader_prefetch_factor 8
     

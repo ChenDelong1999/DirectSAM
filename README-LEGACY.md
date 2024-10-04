@@ -186,7 +186,7 @@ ckpts=(
     # "chendelong/DirectSAM-tiny-distilled-30ep-1024px-0906"
     # "chendelong/DirectSAM-tiny-distilled-30ep-plus-30ep-1024px-0907"
     # "chendelong/DirectSAM-tiny-distilled-30ep-plus-50ep-1024px-0910"
-    "/home/dchenbs/workspace/DirectSAM/runs/directsam_pseudo_label_merged_denoised/0928-1227-768px-from-nvidia_segformer-b0-finetuned-cityscapes-1024-1024/checkpoint-180000"
+    "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1004-1425-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-5000"
 )
 
 datasets=(
@@ -216,7 +216,7 @@ for ckpt in $ckpts; do
     for dataset in $datasets; do
         for threshold in $thresholds; do
 
-            CUDA_VISIBLE_DEVICES=1 python evaluate.py \
+            CUDA_VISIBLE_DEVICES=3 python evaluate.py \
                 --dataset_name $dataset \
                 --directsam_ckpt $ckpt \
                 --resolution 1024 \

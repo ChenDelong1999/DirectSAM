@@ -54,6 +54,7 @@ if __name__=='__main__':
     dataset_config = json.load(open('data/dataset_configs.json'))
 
     dataset = create_dataset(dataset_config[args.dataset], 'train', resolution=args.input_resolution, thickness=args.thickness)
+    eval_dataset = create_dataset(dataset_config[args.dataset], 'validation', resolution=args.input_resolution, thickness=args.thickness)
 
     model = AutoModelForSemanticSegmentation.from_pretrained(args.pretrained, num_labels=1, ignore_mismatched_sizes=True)
     image_processor = AutoImageProcessor.from_pretrained("chendelong/DirectSAM-1800px-0424", reduce_labels=True)
@@ -81,13 +82,16 @@ if __name__=='__main__':
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         
         save_total_limit=20,
-        save_steps=5000,
+        save_steps=2000,
         save_strategy="steps",
 
         dataloader_num_workers=args.dataloader_num_workers,
         dataloader_prefetch_factor=args.dataloader_prefetch_factor,
         
-        do_eval=False,
+        do_eval=True,
+        evaluation_strategy='steps',
+        eval_steps=10000,
+
         logging_steps=args.logging_steps,
         remove_unused_columns=False,
         push_to_hub=False,
@@ -99,6 +103,7 @@ if __name__=='__main__':
         model=model,
         args=training_args,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         data_collator=data_collator,
     )
 

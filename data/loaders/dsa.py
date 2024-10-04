@@ -7,12 +7,13 @@ from pycocotools.mask import decode
 
 class DSADataset():
 
-    def __init__(self, root, label, resolution, pseudo_label="chendelong/DirectSAM-1800px-0424", **kwargs):
+    def __init__(self, root, label, resolution, split, pseudo_label="chendelong/DirectSAM-1800px-0424", **kwargs):
 
         self.root = root
         self.label = label
         self.resolution = resolution
         self.pseudo_label = pseudo_label
+        self.split = split
 
         assert self.label in ['merged', 'pseudo', 'human']
 
@@ -27,7 +28,15 @@ class DSADataset():
 
             files = os.listdir(os.path.join(root, subset))
             files = [x for x in files if x.endswith('.json') and not x.startswith('_')]
-            print(f'\tDSA subset {len(files)} samples:\t{subset}')
+            files.sort()
+
+            if split == 'train':
+                files = files[:int(0.99*len(files))]
+            elif split == 'validation':
+                files = files[int(0.99*len(files)):]
+
+            print(f'\tDSA {split} subset {len(files)} samples:\t{subset}')
+                
             for file in files:
                 self.samples.append(os.path.join(subset, file))
 
@@ -57,6 +66,14 @@ class DSADataset():
         raise ValueError(f'Pseudo label {self.pseudo_label} not found in sample {sample}')
     
     def __getitem__(self, idx):
+        try:
+            return self.getitem(idx)
+        except Exception as e:
+            print(f'Error in sample {idx}: {e}')
+            new_idx = (idx + 1) % len(self)
+            return self.getitem(new_idx)
+    
+    def getitem(self, idx):
 
         file = self.samples[idx]
         sample = json.load(open(os.path.join(self.root, file), 'r'))

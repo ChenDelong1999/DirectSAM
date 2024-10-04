@@ -75,13 +75,10 @@ datasets=(
 	# "cityscapes"			# 2975
 	# "sidewalk"				# 1000
 	# "NYUDepthv2"			# 795
-
 	# "UAVID"					# 200
 	# "EgoHOS"				# 8993
 	# "PhenoBench"			# 1407
-
-	"TreeCount"			# 83
-
+	# "TreeCount"				# 83
 	# "SA1B"					# 318557
 )
 
@@ -100,6 +97,87 @@ for dataset in $datasets; do
         --samples -1
 done
 
+```
 
+
+### Stage 3: Weakly Supervised Sefl-Training on DSA
+
+```bash
+
+export NCCL_P2P_LEVEL=NVL
+
+cd /home/dchenbs/workspace/DirectSAM
+conda activate subobject
+CUDA_VISIBLE_DEVICES=1 torchrun --nproc_per_node 1 --master_port 29512 train.py \
+    --pretrained "chendelong/DirectSAM-1800px-0424" \
+    --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
+    --learning_rate 5e-5 \
+    --dataset DSA_merged \
+    --num_train_epochs 5 \
+    --input_resolution 1024 \
+    --dataloader_num_workers 16 --dataloader_prefetch_factor 8
+    
+```
+
+
+
+### Evaluation
+
+
+
+```bash
+
+thresholds=(
+    0.1
+    0.2
+    0.3
+    0.4
+    0.5
+)
+
+ckpts=(
+    # "chendelong/DirectSAM-1800px-0424"
+    "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1004-1425-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-10000"
+)
+
+datasets=(
+    "PascalPanopticParts"
+    # "ADE20k"
+    # "COCONut_relabeld_COCO_val"
+    # "EntitySeg"
+
+    # "LIP"
+    # "DRAM"
+    # "SOBA"
+    # "SeginW"
+    # "CIHP"
+    # "Fashionpedia"
+    # "SPIN"
+
+    # "PartImageNet++"
+    # "LoveDA"
+    # "PACO"
+    # "DIS5K-DIS-VD"
+    # "DUTS-TE"
+)
+
+cd /home/dchenbs/workspace/DirectSAM
+conda activate subobject
+for ckpt in $ckpts; do
+    for dataset in $datasets; do
+        for threshold in $thresholds; do
+
+            CUDA_VISIBLE_DEVICES=1 python evaluate.py \
+                --dataset_name $dataset \
+                --directsam_ckpt $ckpt \
+                --resolution 1024 \
+                --n_samples 100 \
+                --threshold $threshold \
+                --output_dir "outputs/eval_token_recall" #--sleep_interval 0.1
+
+        done
+    done
+done
 
 ```
+

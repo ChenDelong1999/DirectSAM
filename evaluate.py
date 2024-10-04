@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tqdm
+import cv2
 
 from evaluation.metrics import recall_with_tolerance
 from evaluation.visualization import compare_boundaries
@@ -43,7 +44,7 @@ if __name__ == '__main__':
     else:
         args.n_samples = min(args.n_samples, len(dataset))
 
-    model = DirectSAM(args.directsam_ckpt, args.resolution, args.threshold, args.device)
+    model = DirectSAM(args.directsam_ckpt, args.resolution, args.device)
 
     # {datetime.now().strftime('%m%d_%H%M')}
     output_dir = f"{args.output_dir}/{args.dataset_name}/{'-'.join(args.directsam_ckpt.split('/')[-2:])}/threshold@{args.threshold}"
@@ -64,8 +65,12 @@ if __name__ == '__main__':
         else:
             image, target = sample
 
-        prediction, num_tokens = model(image)
+        probs = model(image)
+        prediction = probs > args.threshold
+
         recall = recall_with_tolerance(target, prediction, tolerance)
+
+        num_tokens, labels = cv2.connectedComponents(1-prediction.astype(np.uint8))
 
         all_num_tokens.append(num_tokens)
         all_recall.append(recall)

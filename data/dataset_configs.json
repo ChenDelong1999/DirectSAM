@@ -95,6 +95,11 @@
         "image_folder": "/home/dchenbs/workspace/datasets/Objects365/raw/Objects365/data/train",
         "label_folder": "/home/dchenbs/workspace/datasets/coconut_dataset/coconut_large/object365_train_panseg"
     },
+    "OpenEarthMap": {
+        "type": "folders",
+        "image_folder": "/home/dchenbs/workspace/datasets/OpenEarthMap/OpenEarthMap/image",
+        "label_folder": "/home/dchenbs/workspace/datasets/OpenEarthMap/OpenEarthMap/label"
+    },
     "TreeCount": {
         "type": "folders",
         "image_folder": "/home/dchenbs/workspace/datasets/TreeCountSegHeight/TreeCount/image",

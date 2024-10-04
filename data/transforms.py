@@ -1,9 +1,9 @@
 import cv2
-import json
 import numpy as np
 from PIL import Image as PILImage
-from pycocotools.mask import decode, frPyObjects
 from skimage.morphology import skeletonize
+from torchvision import transforms
+import torch
 
 
 def boundary_thinning(boundary, thickness=2):
@@ -13,19 +13,24 @@ def boundary_thinning(boundary, thickness=2):
     return boundary
 
 
-def resize_image(image, resolution):
-    if isinstance(image, PILImage.Image):
-        return image.resize((resolution, resolution))
-    elif type(image) == np.ndarray:
-        return cv2.resize(image, (resolution, resolution))
+augmentation = transforms.RandomApply(torch.nn.ModuleList([
+    transforms.GaussianBlur(3, sigma=(0.1, 2.0)),
+    transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),
+    transforms.RandomGrayscale(p=0.2),
+    ]), p=0.25)
+
+
+def preprocess_image(image, resolution, do_augmentation):
+    if type(image) == np.ndarray:
+        image = PILImage.fromarray(image)
+    
+    image = image.resize((resolution, resolution))
+
+    if do_augmentation:
+        return augmentation(image)
     else:
-        raise ValueError(f"Unknown input type: {type(image)}")
+        return image
 
-import cv2
-import numpy as np
-
-import cv2
-import numpy as np
 
 # Initialize the round kernel once
 def create_circular_kernel(size):
@@ -92,8 +97,8 @@ def label_map_to_boundary(label_map, thickness=3):
 
 
 
-def transforms_for_labelmap_dataset(batch, resolution, thickness, image_key="image", annotation_key="annotation", label_map_mode='single_channel', **kwargs):
-    image = [resize_image(x.convert("RGB"), resolution) for x in batch[image_key]]
+def transforms_for_labelmap_dataset(batch, resolution, thickness, image_key="image", annotation_key="annotation", label_map_mode='single_channel', do_augmentation=False, **kwargs):
+    image = [preprocess_image(x.convert("RGB"), resolution, do_augmentation) for x in batch[image_key]]
     label_map = [preprocess_label_map(x, resolution, label_map_mode) for x in batch[annotation_key]]
     labels = [label_map_to_boundary(x, thickness) for x in label_map]
     return {'image': image, 'label': labels, 'label_map': label_map}

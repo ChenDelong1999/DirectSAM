@@ -6,7 +6,7 @@ from .loaders import *
 from .transforms import transforms_for_labelmap_dataset
 
 
-def create_dataset(dataset_info, split, resolution, thickness=3):
+def create_dataset(dataset_info, split, resolution, thickness=3, do_augmentation=False):
 
     if dataset_info['type'] == 'DSA':
         return DSADataset(**dataset_info, split=split, resolution=resolution)
@@ -115,7 +115,7 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
     
     dataset.set_transform(
         lambda x: transforms_for_labelmap_dataset(
-            batch=x, resolution=resolution, thickness=thickness, label_map_mode=label_map_mode,
+            batch=x, resolution=resolution, thickness=thickness, label_map_mode=label_map_mode, do_augmentation=do_augmentation,
             **dataset_info
             ))
 

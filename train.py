@@ -53,7 +53,7 @@ if __name__=='__main__':
 
     dataset_config = json.load(open('data/dataset_configs.json'))
 
-    dataset = create_dataset(dataset_config[args.dataset], 'train', resolution=args.input_resolution, thickness=args.thickness)
+    dataset = create_dataset(dataset_config[args.dataset], 'train', resolution=args.input_resolution, thickness=args.thickness, do_augmentation=True)
     eval_dataset = create_dataset(dataset_config[args.dataset], 'validation', resolution=args.input_resolution, thickness=args.thickness)
 
     model = AutoModelForSemanticSegmentation.from_pretrained(args.pretrained, num_labels=1, ignore_mismatched_sizes=True)

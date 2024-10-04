@@ -76,7 +76,13 @@ datasets=(
 	# "sidewalk"				# 1000
 	# "NYUDepthv2"			# 795
 
-	"SA1B"					# 318557
+	# "UAVID"					# 200
+	# "EgoHOS"				# 8993
+	# "PhenoBench"			# 1407
+
+	"TreeCount"			# 83
+
+	# "SA1B"					# 318557
 )
 
 
@@ -91,7 +97,7 @@ for dataset in $datasets; do
         --checkpoint "chendelong/DirectSAM-1800px-0424" \
         --resolution 1800 --threshold 0.5 --thickness 9 \
         --output_dir "/home/dchenbs/workspace/datasets/DSA/DirectSAM-1800px-0424" \
-        --samples 318557
+        --samples -1
 done
 
 

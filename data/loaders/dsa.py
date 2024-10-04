@@ -22,7 +22,7 @@ class DSADataset():
 
         for subset in self.subsets:
             
-            # if subset!='SA1B':
+            # if subset!='EgoHOS':
             #     continue
 
             files = os.listdir(os.path.join(root, subset))

@@ -62,6 +62,24 @@ class CIHPDataset(FoldersDataset):
 
         super().__init__(image_folder, label_folder)
 
+class EgoHOSDataset(FoldersDataset):
+
+    def __init__(self, root, split):
+        split = 'val' if split == 'validation' else 'train'
+        image_folder = os.path.join(root, split, 'image')
+        label_folder = os.path.join(root, split, 'label')
+
+        super().__init__(image_folder, label_folder)
+
+class PhenoBenchDataset(FoldersDataset):
+
+    def __init__(self, root, split):
+        split = 'val' if split == 'validation' else 'train'
+        image_folder = os.path.join(root, split, 'images')
+        label_folder = os.path.join(root, split, 'leaf_instances')
+
+        super().__init__(image_folder, label_folder, image_suffix='png')
+
 
 class SUIMDataset(FoldersDataset):
 
@@ -141,8 +159,6 @@ class LoveDADataset(FoldersDataset):
             self.image_paths += [os.path.join(root, split, domain, 'images_png', x) for x in images]
             self.label_paths += [os.path.join(root, split, domain, 'masks_png', x) for x in labels]
 
-
-
 class SPINDataset(FoldersDataset):
 
     def __init__(self, image_folder, label_folder, split):
@@ -159,6 +175,23 @@ class SPINDataset(FoldersDataset):
         self.image_paths = [os.path.join(image_folder, id.split('_')[0], id+'.JPEG') for id in self.samples]
         self.label_paths = [os.path.join(label_folder, id+'.png') for id in self.samples]
 
+class UAVIDDataset(FoldersDataset):
+
+    def __init__(self, root, split):
+
+        split = 'val' if split == 'validation' else 'train'
+
+        sequences = os.listdir(os.path.join(root, f'uavid_{split}'))
+
+        self.image_paths = []
+        self.label_paths = []
+
+        for sequence in sequences:
+            images = os.listdir(os.path.join(root, f'uavid_{split}', sequence, 'Images'))
+            
+            for image in images:
+                self.image_paths.append(os.path.join(root, f'uavid_{split}', sequence, 'Images', image))
+                self.label_paths.append(os.path.join(root, f'uavid_{split}', sequence, 'Labels', image))
 
 
 

@@ -54,6 +54,15 @@ def create_dataset(dataset_info, split, resolution, thickness=3):
             print('CelebA dataset only supports train split')
         dataset = CelebADataset(root=dataset_info['root'])
 
+    elif dataset_info['type'] == 'EgoHOS':
+        dataset = EgoHOSDataset(dataset_info['root'], split)
+
+    elif dataset_info['type'] == 'PhenoBench':
+        dataset = PhenoBenchDataset(dataset_info['root'], split)
+
+    elif dataset_info['type'] == 'UAVID':
+        dataset = UAVIDDataset(dataset_info['root'], split)
+
     elif dataset_info['type'] == 'EntitySeg':
         dataset = EntitySegDataset(dataset_info['root'], split, dataset_info['lr'])
 

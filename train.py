@@ -46,6 +46,7 @@ if __name__=='__main__':
     parser.add_argument('--logging_steps', type=int, default=1, help='Number of steps for logging')
     parser.add_argument('--fp16', type=bool, default=True, help='Use fp16 precision')
     parser.add_argument('--thickness', type=int, default=2, help='Thickness of the boundary')
+    parser.add_argument('--do_eval', action='store_true')
 
     args = parser.parse_args()
     
@@ -54,7 +55,10 @@ if __name__=='__main__':
     dataset_config = json.load(open('data/dataset_configs.json'))
 
     dataset = create_dataset(dataset_config[args.dataset], 'train', resolution=args.input_resolution, thickness=args.thickness, do_augmentation=True)
-    eval_dataset = create_dataset(dataset_config[args.dataset], 'validation', resolution=args.input_resolution, thickness=args.thickness)
+    if args.do_eval:
+        eval_dataset = create_dataset(dataset_config[args.dataset], 'validation', resolution=args.input_resolution, thickness=args.thickness)
+    else:
+        eval_dataset = None
 
     model = AutoModelForSemanticSegmentation.from_pretrained(args.pretrained, num_labels=1, ignore_mismatched_sizes=True)
     image_processor = AutoImageProcessor.from_pretrained("chendelong/DirectSAM-1800px-0424", reduce_labels=True)
@@ -88,8 +92,8 @@ if __name__=='__main__':
         dataloader_num_workers=args.dataloader_num_workers,
         dataloader_prefetch_factor=args.dataloader_prefetch_factor,
         
-        eval_on_start=True,
-        do_eval=True,
+        eval_on_start=args.do_eval,
+        do_eval=args.do_eval,
         evaluation_strategy='steps',
         eval_steps=2000,
 

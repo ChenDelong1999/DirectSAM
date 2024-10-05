@@ -39,7 +39,7 @@ class SA1BDataset:
                 if label_map is None:
                     label_map = segmentation
                 else:
-                    label_map += segmentation * (i + 1)
+                    label_map += segmentation * ((i + 1) % 255)
 
             batch = {'image': [image], 'annotation': [label_map]}
             transformed = self.transform(batch)

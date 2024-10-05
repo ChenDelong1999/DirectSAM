@@ -17,7 +17,7 @@
     },
     "SA1B": {
         "type": "SA1B",
-        "root": "/home/dchenbs/workspace/datasets/sa1b"
+        "root": "/cpfs/shared/research-llm/liujianfeng/08_subobject/data/sa1b"
     },
     "cityscapes": {
         "type": "huggingface_dataset",

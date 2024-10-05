@@ -21,17 +21,17 @@ conda create -n directsam python=3.8
 ### Stage 1: Large-scale Pretraining on SA-1B
 
 ```bash
-
-cd /home/dchenbs/workspace/DirectSAM
-conda activate subobject
-CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node 1 --master_port 29511 train.py \
+# On CPFS
+cd /cpfs/shared/research-llm/liujianfeng/08_subobject/DirectSAM
+conda activate subobjects_vlm
+CUDA_VISIBLE_DEVICES=1,3,4,7 torchrun --nproc_per_node 4 --master_port 29511 train.py \
     --pretrained "nvidia/segformer-b0-finetuned-cityscapes-1024-1024" \
-    --per_device_train_batch_size 4 --gradient_accumulation_steps 1 \
+    --per_device_train_batch_size 4 --gradient_accumulation_steps 4 \
     --learning_rate 1e-4 \
     --dataset SA1B \
-    --num_train_epochs 100 \
-    --input_resolution 1800 --thickness 3 \
-    --dataloader_num_workers 16 --dataloader_prefetch_factor 8
+    --num_train_epochs 10 \
+    --input_resolution 1024 --thickness 5 \
+    --dataloader_num_workers 32 --dataloader_prefetch_factor 8
     
 ```
 
@@ -118,7 +118,8 @@ CUDA_VISIBLE_DEVICES=4,5 torchrun --nproc_per_node 2 --master_port 29512 train.p
     --dataset DSA_merged \
     --num_train_epochs 3 \
     --input_resolution 1024 \
-    --dataloader_num_workers 16 --dataloader_prefetch_factor 8
+    --dataloader_num_workers 16 --dataloader_prefetch_factor 8 \
+    --do_eval
     
 ```
 

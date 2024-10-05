@@ -82,16 +82,16 @@ if __name__=='__main__':
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         
         save_total_limit=50,
-        save_steps=1000,
+        save_steps=2000,
         save_strategy="steps",
 
         dataloader_num_workers=args.dataloader_num_workers,
         dataloader_prefetch_factor=args.dataloader_prefetch_factor,
         
-        eval_on_start=False,
-        do_eval=False,
+        eval_on_start=True,
+        do_eval=True,
         evaluation_strategy='steps',
-        eval_steps=10000,
+        eval_steps=2000,
 
         logging_steps=args.logging_steps,
         remove_unused_columns=False,

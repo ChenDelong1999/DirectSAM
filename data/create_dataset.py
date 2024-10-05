@@ -3,17 +3,32 @@ import os
 from datasets import load_dataset
 
 from .loaders import *
-from .transforms import transforms_for_labelmap_dataset
+from .transforms import transforms_for_labelmap_dataset, transforms_for_contour_dataset
 
 
 def create_dataset(dataset_info, split, resolution, thickness=3, do_augmentation=False):
+    
+    assert split in ['train', 'validation']
 
     if dataset_info['type'] == 'DSA':
         return DSADataset(**dataset_info, split=split, resolution=resolution, do_augmentation=do_augmentation)
     
-    # belowings are all label map-based datasets
+    elif dataset_info['type'] == 'WireFrame':
 
-    assert split in ['train', 'validation']
+        image_folder = os.path.join(dataset_info['root'], split, 'image')
+        label_folder = os.path.join(dataset_info['root'], split, 'label')
+
+        dataset = FoldersDataset(image_folder, label_folder)
+
+        dataset.set_transform(
+            lambda x: transforms_for_contour_dataset(
+                batch=x, resolution=resolution, do_augmentation=do_augmentation,
+                **dataset_info
+                ))
+
+        return dataset
+
+    # belowings are all label map-based datasets
 
     label_map_mode = 'single_channel'
 
@@ -30,6 +45,7 @@ def create_dataset(dataset_info, split, resolution, thickness=3, do_augmentation
 
         if 'GTA' in dataset_info['image_folder'] and split == 'validation':
                 print('GTA-V dataset only supports train split')
+                
 
     elif dataset_info['type'] == 'huggingface_dataset':
         dataset = load_dataset(dataset_info['id'], split=split) 

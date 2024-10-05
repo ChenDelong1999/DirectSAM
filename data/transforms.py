@@ -103,3 +103,11 @@ def transforms_for_labelmap_dataset(batch, resolution, thickness, image_key="ima
     labels = [label_map_to_boundary(x, thickness) for x in label_map]
     return {'image': image, 'label': labels, 'label_map': label_map}
 
+
+
+def transforms_for_contour_dataset(batch, resolution, image_key="image", annotation_key="annotation", do_augmentation=False, **kwargs):
+    image = [preprocess_image(x.convert("RGB"), resolution, do_augmentation) for x in batch[image_key]]
+    labels = [np.array(x.resize((resolution, resolution))).astype(bool) for x in batch[annotation_key]]
+
+    return {'image': image, 'label': labels, 'label_map': labels}
+

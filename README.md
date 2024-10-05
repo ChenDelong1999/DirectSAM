@@ -80,7 +80,8 @@ datasets=(
 	# "PhenoBench"			# 1407
 	# "TreeCount"				# 83
 	# "SA1B"					# 318557
-    "OpenEarthMap"            # 10748
+    # "OpenEarthMap"            # 10748
+    "WireFrame"           # 5000
 )
 
 
@@ -90,7 +91,7 @@ for dataset in $datasets; do
 
     echo -e ">>> All Datasets to Run: $datasets\n\n>>> Current Dataset: $dataset\n"
     
-    CUDA_VISIBLE_DEVICES=5 python pseudo_labeling.py \
+    CUDA_VISIBLE_DEVICES=1 python pseudo_labeling.py \
         --dataset $dataset \
         --checkpoint "chendelong/DirectSAM-1800px-0424" \
         --resolution 1800 --threshold 0.5 --thickness 9 \
@@ -111,11 +112,11 @@ cd /home/dchenbs/workspace/DirectSAM
 conda activate subobject
 CUDA_VISIBLE_DEVICES=4,5 torchrun --nproc_per_node 2 --master_port 29512 train.py \
     --pretrained "chendelong/DirectSAM-1800px-0424" \
-    --per_device_train_batch_size 1 --gradient_accumulation_steps 16 \
+    --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
     --learning_rate 1e-4 \
     --dataset DSA_merged \
-    --num_train_epochs 1 \
-    --input_resolution 1700 \
+    --num_train_epochs 3 \
+    --input_resolution 1024 \
     --dataloader_num_workers 16 --dataloader_prefetch_factor 8
     
 ```

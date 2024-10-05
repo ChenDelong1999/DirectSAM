@@ -5,19 +5,18 @@
         "root": "/home/dchenbs/workspace/datasets/DSA/DirectSAM-1800px-0424",
         "label": "merged"
     },
-    "DSA_human": {
+    "SA1B_contour": {
         "type": "DSA",
-        "root": "/home/dchenbs/workspace/datasets/DSA/DirectSAM-1800px-0424",
+        "root": "/home/dchenbs/workspace/datasets/sa1b_contour",
         "label": "human"
-    },
-    "DSA_pseudo": {
-        "type": "DSA",
-        "root": "/home/dchenbs/workspace/datasets/DSA/DirectSAM-1800px-0424",
-        "label": "pseudo"
     },
     "SA1B": {
         "type": "SA1B",
         "root": "/cpfs/shared/research-llm/liujianfeng/08_subobject/data/sa1b"
+    },
+    "SA1B_116": {
+        "type": "SA1B",
+        "root": "/home/dchenbs/workspace/datasets/sa1b"
     },
     "cityscapes": {
         "type": "huggingface_dataset",

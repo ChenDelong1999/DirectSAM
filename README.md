@@ -20,6 +20,15 @@ conda create -n directsam python=3.8
 
 ### Stage 1: Large-scale Pretraining on SA-1B
 
+
+```bash
+python sa1b_mask_to_contour.py \
+    --resolution 1800 --thickness 9 \
+    --output_dir "/home/dchenbs/workspace/datasets/sa1b_contour" \
+    --samples -1
+```
+
+
 ```bash
 # On CPFS
 cd /cpfs/shared/research-llm/liujianfeng/08_subobject/DirectSAM

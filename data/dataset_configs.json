@@ -99,6 +99,10 @@
         "type": "WireFrame",
         "root": "/home/dchenbs/workspace/datasets/wireframe/preprocessed"
     },
+    "ISAID": {
+        "type": "ISAID",
+        "root": "/home/dchenbs/workspace/datasets/iSAID/cropped"
+    },
     "OpenEarthMap": {
         "type": "folders",
         "image_folder": "/home/dchenbs/workspace/datasets/OpenEarthMap/OpenEarthMap/image",

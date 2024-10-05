@@ -81,7 +81,8 @@ datasets=(
 	# "TreeCount"				# 83
 	# "SA1B"					# 318557
     # "OpenEarthMap"            # 10748
-    "WireFrame"           # 5000
+    # "WireFrame"           # 5000
+    "ISAID"               # 4792
 )
 
 
@@ -91,7 +92,7 @@ for dataset in $datasets; do
 
     echo -e ">>> All Datasets to Run: $datasets\n\n>>> Current Dataset: $dataset\n"
     
-    CUDA_VISIBLE_DEVICES=1 python pseudo_labeling.py \
+    CUDA_VISIBLE_DEVICES=2 python pseudo_labeling.py \
         --dataset $dataset \
         --checkpoint "chendelong/DirectSAM-1800px-0424" \
         --resolution 1800 --threshold 0.5 --thickness 9 \

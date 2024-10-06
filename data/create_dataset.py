@@ -103,6 +103,9 @@ def create_dataset(dataset_info, split, resolution, thickness=3, do_augmentation
     elif dataset_info['type'] == 'ISAID':
         dataset = ISAIDDataset(dataset_info['root'], split)
 
+    elif dataset_info['type'] == 'MapillaryMetropolis':
+        dataset = MapillaryMetropolisDataset(dataset_info['root'], split)
+
     elif dataset_info['type'] == 'SPIN':
         dataset = SPINDataset(dataset_info['image_folder'], dataset_info['label_folder'], split)
 

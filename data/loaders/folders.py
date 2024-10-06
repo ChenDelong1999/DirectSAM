@@ -110,6 +110,16 @@ class ISAIDDataset(FoldersDataset):
         super().__init__(image_folder, label_folder)
 
 
+class MapillaryMetropolisDataset(FoldersDataset):
+
+    def __init__(self, root, split):
+        split = 'val' if split == 'validation' else 'train'
+        image_folder = os.path.join(root, split, 'images')
+        label_folder = os.path.join(root, split, 'labels')
+
+        super().__init__(image_folder, label_folder)
+
+
 class LIPDataset(FoldersDataset):
 
     def __init__(self, root, split):

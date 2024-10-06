@@ -18,6 +18,10 @@
         "type": "SA1B",
         "root": "/home/dchenbs/workspace/datasets/sa1b"
     },
+    "MapillaryMetropolis": {
+        "type": "MapillaryMetropolis",
+        "root": "/home/dchenbs/workspace/datasets/OpenDataLab___Mapillary/Mapillary_Metropolis_Dataset/preprocessed"
+    },
     "cityscapes": {
         "type": "huggingface_dataset",
         "id": "Chris1/cityscapes",

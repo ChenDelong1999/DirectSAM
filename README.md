@@ -120,7 +120,7 @@ export NCCL_P2P_LEVEL=NVL
 
 cd /home/dchenbs/workspace/DirectSAM
 conda activate subobject
-CUDA_VISIBLE_DEVICES=4,5 torchrun --nproc_per_node 2 --master_port 29512 train.py \
+CUDA_VISIBLE_DEVICES=3,4 torchrun --nproc_per_node 2 --master_port 29512 train.py \
     --pretrained "chendelong/DirectSAM-1800px-0424" \
     --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
     --learning_rate 1e-4 \
@@ -146,32 +146,23 @@ thresholds=(
     0.3
     0.4
     0.5
+    0.6
+    0.7
+    0.8
+    0.9
 )
 
 ckpts=(
     # "chendelong/DirectSAM-1800px-0424"
-    "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1004-1425-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-10000"
+    # "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-2000"
+    "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-10000"
 )
 
 datasets=(
+    "COCONut_relabeld_COCO_val"
+    "EntitySeg"
     "PascalPanopticParts"
-    # "ADE20k"
-    # "COCONut_relabeld_COCO_val"
-    # "EntitySeg"
-
-    # "LIP"
-    # "DRAM"
-    # "SOBA"
-    # "SeginW"
-    # "CIHP"
-    # "Fashionpedia"
-    # "SPIN"
-
-    # "PartImageNet++"
-    # "LoveDA"
-    # "PACO"
-    # "DIS5K-DIS-VD"
-    # "DUTS-TE"
+    "SA1B_116"
 )
 
 cd /home/dchenbs/workspace/DirectSAM
@@ -180,13 +171,14 @@ for ckpt in $ckpts; do
     for dataset in $datasets; do
         for threshold in $thresholds; do
 
-            CUDA_VISIBLE_DEVICES=1 python evaluate.py \
+            CUDA_VISIBLE_DEVICES=2 python evaluate.py \
                 --dataset_name $dataset \
                 --directsam_ckpt $ckpt \
                 --resolution 1024 \
-                --n_samples 100 \
+                --thickness 5 \
+                --n_samples 1000 \
                 --threshold $threshold \
-                --output_dir "outputs/eval_token_recall" #--sleep_interval 0.1
+                --output_dir "outputs/eval_token_recall" --sleep_interval 0.1
 
         done
     done

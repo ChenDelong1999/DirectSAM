@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_configs', default='data/dataset_configs.json')
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--resolution', type=int, default=1024)
+    parser.add_argument('--thickness', type=float, default=5)
     parser.add_argument('--n_samples', type=int, default=-1)
     parser.add_argument('--threshold', type=float, default=0.01)
     parser.add_argument('--dataset_name', default='PascalPanopticParts')
@@ -29,8 +30,10 @@ if __name__ == '__main__':
     parser.add_argument('--directsam_ckpt', default='chendelong/DirectSAM-tiny-distilled-15ep-768px-0821')
     args = parser.parse_args()
 
-    tolerance = args.resolution // 100 
+    tolerance = args.resolution // 200 
     tolerance += int(tolerance % 2 == 0)
+
+    print(f'Tolerance: {tolerance}')
 
     dataset_configs = json.load(open(args.dataset_configs, 'r'))
     dataset = create_dataset(

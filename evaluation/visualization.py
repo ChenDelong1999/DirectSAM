@@ -4,8 +4,9 @@ import numpy as np
 
 def compare_boundaries(target, prediction, tolerance, linewidth, brightness=150):
 
-    target_blured = cv2.GaussianBlur(target.astype(np.float32), (tolerance, tolerance), 0) > 0
-    prediction_blured = cv2.GaussianBlur(prediction.astype(np.float32), (tolerance, tolerance), 0) > 0
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (tolerance*2, tolerance*2))
+    target_blured = cv2.filter2D(target.astype(np.float32), -1, kernel) > 0
+    prediction_blured = cv2.filter2D(prediction.astype(np.float32), -1, kernel) > 0
 
     gray = target * prediction_blured
     red = target * (prediction_blured == 0)

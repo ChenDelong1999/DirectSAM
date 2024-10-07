@@ -214,6 +214,29 @@ class UAVIDDataset(FoldersDataset):
                 self.label_paths.append(os.path.join(root, f'uavid_{split}', sequence, 'Labels', image))
 
 
+class DRAMDataset(FoldersDataset):
+
+    def __init__(self, root, split):
+
+        if split == 'validation':
+            self.split = 'test'
+        else:
+            self.split = 'train'
+            raise ValueError('DRAM dataset only has annotations for test split')
+
+        self.root = root
+
+        self.image_paths = []
+        self.label_paths = []
+        for file in os.listdir(os.path.join(root, self.split)):
+            if file.endswith('.txt'):
+                with open(os.path.join(root, self.split, file), 'r') as f:
+                    for line in f:
+                        sample = line.strip()
+                        self.image_paths.append(os.path.join(self.root, self.split, sample+'.jpg'))
+                        self.label_paths.append(os.path.join(self.root, 'labels', sample+'.png'))
+
+
 
 class SOBADataset(FoldersDataset):
 

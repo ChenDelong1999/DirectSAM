@@ -250,49 +250,8 @@
         "label_folder": "/home/dchenbs/workspace/datasets/GTA5/OpenDataLab___GTA5/raw/labels",
         "image_suffix": "png"
     },
-
-
-
-    "COCO2017": {
-        "type": "coco",
-        "image_folder": "/home/dchenbs/workspace/datasets/coco2017/images",
-        "annotations": "/home/dchenbs/workspace/datasets/coco2017/annotations"
-    },
-
     "DRAM": {
         "type": "DRAM",
         "root": "/home/dchenbs/workspace/datasets/DRAM"
-    },
-    "UDA-Part": {
-        "type": "UDA-Part",
-        "root": "/home/dchenbs/workspace/datasets/UDA-Part/ds_version"
-    },
-    "PartIT": {
-        "type": "PartIT",
-        "root": "/home/dchenbs/workspace/datasets/PartIT"
-    },
-    "directsam_pseudo_label": {
-        "type": "directsam_pseudo_label",
-        "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
-        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output"
-    },
-    "directsam_pseudo_label_legacy": {
-        "type": "directsam_pseudo_label",
-        "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
-        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_3600px_thr.005_output"
-    },
-    "directsam_pseudo_label_merged": {
-        "type": "directsam_pseudo_label",
-        "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
-        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output_merged"
-    },
-    "directsam_pseudo_label_merged_denoised": {
-        "type": "directsam_pseudo_label",
-        "sa1b_dir": "/home/dchenbs/workspace/datasets/sa1b",
-        "pseudo_label_dir": "/home/dchenbs/workspace/datasets/sa1b_directsam/res_1800px_thr.03_output_merged_denoised"
-    },
-    "directsa_plus": {
-        "type": "directsa_plus",
-        "root": "/home/dchenbs/workspace/datasets/DirectSAPlus/DirectSAM-1800px-0424"
     }
 }

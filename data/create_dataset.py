@@ -118,6 +118,9 @@ def create_dataset(dataset_info, split, resolution, thickness=3, do_augmentation
     elif dataset_info['type'] == 'SeginW':
         dataset = SeginWDataset(dataset_info['root'], split)
 
+    elif dataset_info['type'] == 'DRAM':
+        dataset = DRAMDataset(dataset_info['root'], split)
+
     elif dataset_info['type'] == 'LVIS':
         annotation_file = 'lvis_v1_val.json' if split == 'validation' else 'lvis_v1_train.json'
         dataset = LvisDataset(

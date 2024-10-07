@@ -132,7 +132,18 @@ CUDA_VISIBLE_DEVICES=3,4 torchrun --nproc_per_node 2 --master_port 29512 train.p
     
 ```
 
+### Stage 4: Adding new generation of Pseudo-labels
 
+```bash
+cd /home/dchenbs/workspace/DirectSAM
+conda activate subobject
+CUDA_VISIBLE_DEVICES=3 python pseudo_labeling_dsa.py \
+    --root /home/dchenbs/workspace/datasets/DSA/DirectSAM-1800px-0424 \
+    --checkpoint "chendelong/DirectSAM-gen1-1024px-1008" \
+    --resolution 1024 --threshold 0.5 --thickness 5 \
+    --output_dir "/home/dchenbs/workspace/datasets/DSA/DirectSAM-gen1-1024px-1008" \
+    --samples -1
+```
 
 ### Evaluation
 
@@ -153,8 +164,8 @@ thresholds=(
 )
 
 ckpts=(
-    "chendelong/DirectSAM-1800px-0424"
-    # "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-20000"
+    # "chendelong/DirectSAM-1800px-0424"
+    "chendelong/DirectSAM-gen1-1024px-1008"
 )
 
 datasets=(
@@ -184,3 +195,15 @@ done
 
 ```
 
+
+
+### Push to hub
+
+```python
+from transformers import AutoModelForSemanticSegmentation, AutoImageProcessor
+
+checkpoint = "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-22000"
+model = AutoModelForSemanticSegmentation.from_pretrained(checkpoint)
+model.push_to_hub("chendelong/DirectSAM-gen1-1024px-1008")
+
+```

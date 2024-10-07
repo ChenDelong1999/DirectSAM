@@ -8,13 +8,44 @@ from model.directsam import DirectSAM
 from pycocotools.mask import encode
 import argparse
 import datetime
-from data.create_dataset import create_dataset
+
+
+
+class DSADataset():
+
+    def __init__(self, root):
+
+        self.root = root
+
+        self.subsets = os.listdir(root)
+        self.subsets.sort()
+        self.samples = []
+
+        for subset in self.subsets:
+
+            files = os.listdir(os.path.join(root, subset))
+            files = [x for x in files if x.endswith('.json') and not x.startswith('_')]
+            files.sort()
+                
+            for file in files:
+                self.samples.append(os.path.join(subset, file))
+
+    def __len__(self):
+        return len(self.samples)
+    
+
+    def __getitem__(self, idx):
+
+        file = self.samples[idx]
+        
+        return file
+
 
 dataset_configs = json.load(open('data/dataset_configs.json', 'r'))
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--checkpoint", type=str, help="Path to the checkpoint")
-parser.add_argument("--dataset", type=str, help="ID of the dataset")
+parser.add_argument("--root", type=str, help="root to DSA")
 parser.add_argument("--output_dir", type=str, help="Path to the output directory")
 parser.add_argument("--resolution", type=int, help="Resolution of DirectSAM model")
 parser.add_argument("--threshold", type=float, help="Threshold value for segmentation")
@@ -25,10 +56,10 @@ args = parser.parse_args()
 
 model = DirectSAM(args.checkpoint, args.resolution, 'cuda')
 
-args.output_dir = os.path.join(args.output_dir, os.path.basename(args.dataset))
 os.makedirs(args.output_dir, exist_ok=True)
 
-dataset = create_dataset(dataset_configs[args.dataset], split='train', resolution=args.resolution, thickness=args.thickness)
+dataset = DSADataset(args.root)
+print(f'Loaded {len(dataset)} samples')
 
 args.samples = len(dataset) if args.samples == -1 else args.samples
 args.timestamp = datetime.datetime.now().strftime("%Y%m%d-%H:%M")
@@ -38,43 +69,40 @@ index_mapping = np.random.permutation(min(args.samples, len(dataset)))
 for i in tqdm.tqdm(range(args.samples)):
 
     i = int(index_mapping[i])
+    file  = dataset[i]
 
-    output_file = os.path.join(args.output_dir, f'{i:07d}.json')
+    subset, basename = file.split('/')
+
+    os.makedirs(os.path.join(args.output_dir, subset), exist_ok=True)
+
+    output_file = os.path.join(args.output_dir, file)
     if os.path.exists(output_file):
         continue
 
     try: 
-        image_path = dataset.image_paths[i]
-        image_size = Image.open(image_path).size
 
-        sample = dataset[i]
-        image = sample['image']
-        human_label = sample['label']
-
+        sample = json.load(open(os.path.join(args.root, file), 'r'))
+        image = Image.open(sample['image_path']).convert('RGB')
+        
         probabilities = model(image)
         pseudo_label = probabilities > args.threshold
 
         rle_prediction = encode(np.array(pseudo_label, order='F', dtype=np.uint8))
         rle_prediction['counts'] = rle_prediction['counts'].decode('utf-8')
 
-        rel_human_label = encode(np.array(human_label, order='F', dtype=np.uint8))
-        rel_human_label['counts'] = rel_human_label['counts'].decode('utf-8')
+        sample['pseudo_label'].append(
+            {
+                'source': args.checkpoint,
+                'label': rle_prediction
+            }
+        )
 
-        result = {}
-        result['image_path'] = image_path
-        result['image_size'] = image_size
-        # result['info'] = vars(args)
-        result['pseudo_label'] = [{
-            'source': args.checkpoint,
-            'label': rle_prediction
-            }]
-        result['human_label'] = [{
-            'source': args.dataset,
-            'label': rel_human_label
-            }]
+        # remove "info" from sample
+        if 'info' in sample:
+            sample.pop('info')
 
         with open(output_file, 'w') as f:
-            json.dump(result, f, indent=4)
+            json.dump(sample, f, indent=4)
 
     except Exception as e:
 

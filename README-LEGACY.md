@@ -247,8 +247,8 @@ done
 ```python
 from transformers import AutoModelForSemanticSegmentation, AutoImageProcessor
 
-checkpoint = "/home/dchenbs/workspace/DirectSAM/runs/directsam_pseudo_label_merged/0910-2233-1024px-from-nvidia_segformer-b0-finetuned-cityscapes-1024-1024/checkpoint-240000"
+checkpoint = "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-22000"
 model = AutoModelForSemanticSegmentation.from_pretrained(checkpoint)
-model.push_to_hub("chendelong/DirectSAM-tiny-distilled-70ep-1024px-0920")
+model.push_to_hub("chendelong/DirectSAM-gen1-1024px-1008")
 
 ```

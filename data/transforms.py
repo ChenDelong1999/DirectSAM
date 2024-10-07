@@ -34,9 +34,12 @@ def preprocess_image(image, resolution, do_augmentation):
 
 # Initialize the round kernel once
 def create_circular_kernel(size):
-    kernel = np.zeros((size, size), np.uint8)
-    center = size // 2
-    cv2.circle(kernel, (center, center), center, 1, -1)
+    if size > 3:
+        kernel = np.zeros((size, size), np.uint8)
+        center = size // 2
+        cv2.circle(kernel, (center, center), center, 1, -1)
+    else:
+        kernel = np.ones((size, size), np.uint8)
     return kernel
 
 # Global circular kernel

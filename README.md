@@ -153,13 +153,11 @@ thresholds=(
 )
 
 ckpts=(
-    # "chendelong/DirectSAM-1800px-0424"
-    # "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-2000"
-    "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-10000"
+    "chendelong/DirectSAM-1800px-0424"
+    # "/home/dchenbs/workspace/DirectSAM/runs/DSA_merged/1006-2038-1024px-from-chendelong_DirectSAM-1800px-0424/checkpoint-20000"
 )
 
 datasets=(
-    "COCONut_relabeld_COCO_val"
     "EntitySeg"
     "PascalPanopticParts"
     "SA1B_116"
@@ -171,15 +169,15 @@ for ckpt in $ckpts; do
     for dataset in $datasets; do
         for threshold in $thresholds; do
 
-            CUDA_VISIBLE_DEVICES=2 python evaluate.py \
+            CUDA_VISIBLE_DEVICES=1 python evaluate.py \
                 --dataset_name $dataset \
                 --directsam_ckpt $ckpt \
                 --resolution 1024 \
-                --thickness 5 \
+                --tolerance 10 \
                 --n_samples 1000 \
                 --threshold $threshold \
-                --output_dir "outputs/eval_token_recall" --sleep_interval 0.1
-
+                --output_dir "outputs/effective_boundary_recall" \
+                --sleep_interval 0.1
         done
     done
 done

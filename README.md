@@ -22,9 +22,11 @@ conda create -n directsam python=3.8
 
 
 ```bash
-python sa1b_mask_to_contour.py \
-    --resolution 1800 --thickness 9 \
-    --output_dir "/home/dchenbs/workspace/datasets/sa1b_contour" \
+cd /cpfs/shared/research-llm/liujianfeng/08_subobject/DirectSAM
+conda activate subobjects_vlm
+CUDA_VISIBLE_DEVICES=2 python sa1b_mask_to_contour.py \
+    --resolution 1024 --thickness 5 \
+    --output_dir "/cpfs/shared/research-llm/liujianfeng/08_subobject/data/sa1b_contour" \
     --samples -1
 ```
 
@@ -180,7 +182,7 @@ for ckpt in $ckpts; do
     for dataset in $datasets; do
         for threshold in $thresholds; do
 
-            CUDA_VISIBLE_DEVICES=1 python evaluate.py \
+            CUDA_VISIBLE_DEVICES=5 python evaluate.py \
                 --dataset_name $dataset \
                 --directsam_ckpt $ckpt \
                 --resolution 1024 \

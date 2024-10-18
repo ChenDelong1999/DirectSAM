@@ -8,18 +8,21 @@ from pycocotools.mask import decode
 class SA1BDataset:
 
     def __init__(self, root):
-        self.image_paths = []
-        for subfolder in tqdm.tqdm(os.listdir(root)):
-            subfolder_path = os.path.join(root, subfolder)
-            if os.path.isdir(subfolder_path):
-                for img_file in os.listdir(subfolder_path):
-                    if img_file.endswith('.jpg'):
-                        try:
-                            self.image_paths.append(os.path.join(subfolder_path, img_file))
-                        except:
-                            print(f"Skipping image {img_file} in {subfolder}")
+        if os.path.exists('sa1b_image_paths.json'):
+            self.image_paths = json.load(open('sa1b_image_paths.json'))
+        else:
+            self.image_paths = []
+            for subfolder in tqdm.tqdm(os.listdir(root)):
+                subfolder_path = os.path.join(root, subfolder)
+                if os.path.isdir(subfolder_path):
+                    for img_file in os.listdir(subfolder_path):
 
-        print(len(self.image_paths), self.image_paths[:5])
+                        if img_file.endswith('.jpg'):
+                            image_path = os.path.join(subfolder_path, img_file)
+                            json_path = image_path.replace('.jpg', '.json')
+                            if os.path.exists(json_path):
+                                self.image_paths.append(image_path)
+            json.dump(self.image_paths, open('sa1b_image_paths.json', 'w'))
 
 
     def __len__(self):

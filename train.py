@@ -44,7 +44,7 @@ if __name__=='__main__':
     parser.add_argument('--dataloader_num_workers', type=int, default=4, help='Number of workers for the dataloader')
     parser.add_argument('--dataloader_prefetch_factor', type=int, default=4, help='Prefetch factor for the dataloader')
     parser.add_argument('--logging_steps', type=int, default=1, help='Number of steps for logging')
-    parser.add_argument('--fp16', type=bool, default=True, help='Use fp16 precision')
+    parser.add_argument('--fp16', action='store_true', help='Use mixed precision training')
     parser.add_argument('--thickness', type=int, default=2, help='Thickness of the boundary')
     parser.add_argument('--do_eval', action='store_true')
 
@@ -77,12 +77,14 @@ if __name__=='__main__':
         output_dir=f"runs/{args.dataset}/{datetime.datetime.now().strftime('%m%d-%H%M')}-{args.input_resolution}px-from-{args.pretrained.replace('/', '_')}",
         
         learning_rate=args.learning_rate,
+        max_grad_norm=0.04,
         warmup_steps=5000,
         lr_scheduler_type='constant_with_warmup',
 
         num_train_epochs=args.num_train_epochs,
         max_steps=args.max_steps,
         per_device_train_batch_size=args.per_device_train_batch_size,
+        per_device_eval_batch_size=1,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         
         save_total_limit=50,

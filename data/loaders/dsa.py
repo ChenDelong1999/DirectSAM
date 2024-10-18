@@ -33,7 +33,7 @@ class DSADataset():
 
         for subset in self.subsets:
             
-            # if subset!='OpenEarthMap':
+            # if subset not in ['OpenEarthMap', 'LoveDA', 'ISAID', 'tcd']:
             #     continue
 
             files = os.listdir(os.path.join(root, subset))
@@ -83,24 +83,25 @@ class DSADataset():
             new_idx = (idx + 1) % len(self)
             return self.getitem(new_idx)
     
-    def getitem(self, idx):
+    def getitem(self, idx, visualize_labels=False):
 
         file = self.samples[idx]
         sample = json.load(open(os.path.join(self.root, file), 'r'))
 
         # # debug
-        # import matplotlib.pyplot as plt
-        # plt.figure(figsize=((len(sample['pseudo_label']) + len(sample['human_label']))*6, 6))
-        # for i, pseudo_label in enumerate(sample['pseudo_label']):
-        #     plt.subplot(1, len(sample['pseudo_label']) + len(sample['human_label']), i+1)
-        #     plt.imshow(decode(pseudo_label['label']), cmap='Reds')
-        #     plt.title(pseudo_label['source'])
+        if visualize_labels:
+            import matplotlib.pyplot as plt
+            plt.figure(figsize=((len(sample['pseudo_label']) + len(sample['human_label']))*7, 7))
+            for i, pseudo_label in enumerate(sample['pseudo_label']):
+                plt.subplot(1, len(sample['pseudo_label']) + len(sample['human_label']), i+1)
+                plt.imshow(decode(pseudo_label['label']), cmap='Reds')
+                plt.title(pseudo_label['source'])
 
-        # for i, human_label in enumerate(sample['human_label']):
-        #     plt.subplot(1, len(sample['pseudo_label']) + len(sample['human_label']), i+1+len(sample['pseudo_label']))
-        #     plt.imshow(decode(human_label['label']), cmap='Greens')
-        #     plt.title(human_label['source'])
-        # plt.show()
+            for i, human_label in enumerate(sample['human_label']):
+                plt.subplot(1, len(sample['pseudo_label']) + len(sample['human_label']), i+1+len(sample['pseudo_label']))
+                plt.imshow(decode(human_label['label']), cmap='Greens')
+                plt.title(human_label['source'])
+            plt.show()
 
         image = Image.open(sample['image_path']).convert('RGB')
         image = image.resize((self.resolution, self.resolution))

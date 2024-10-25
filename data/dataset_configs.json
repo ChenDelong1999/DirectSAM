@@ -1,5 +1,10 @@
 {
     
+    "DSA_gen3": {
+        "type": "DSA",
+        "root": "/home/dchenbs/workspace/datasets/DSA/DirectSAM-gen3-1024px-1023",
+        "label": "merged"
+    },
     "DSA_gen2": {
         "type": "DSA",
         "root": "/home/dchenbs/workspace/datasets/DSA/DirectSAM-gen2-1024px-1014",
